@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Avalonia ilk kareyi çizene kadar görünen zemin; Fluent temanın açık zeminiyle aynı. -->
+  <color name="window_background">#FFFFFFFF</color>
+  <color name="ic_launcher_background">#FF1D3557</color>
+</resources>

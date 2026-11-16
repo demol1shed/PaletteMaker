@@ -23,15 +23,57 @@ public static class ImageLoader
     public static bool IsSupportedExtension(string path) =>
         AllowedExtensions.Contains(Path.GetExtension(path));
 
+    private const string UnsupportedTypeMessage = "Desteklenmeyen dosya türü. Yalnızca PNG, JPG, JPEG ve WebP açılabilir.";
+    private const string TooLargeMessage = "Dosya çok büyük (en fazla 100 MB).";
+
+    /// <summary>
+    /// Akıştan gelen (seçici, sürükle-bırak, Android paylaşımı) dosyanın adını denetler: uzantı varsa ve
+    /// desteklenmiyorsa reddeder. Uzantısız adlar geçer, çünkü Android içerik sağlayıcıları sık sık uzantısız
+    /// ad verir; asıl denetim <see cref="Decode"/> içindeki içerik kontrolüdür.
+    /// <paramref name="requireExtension"/> verilirse (yerel dosya yolu) uzantısız adlar da reddedilir.
+    /// </summary>
+    public static void EnsureSupportedName(string? fileName, bool requireExtension = false)
+    {
+        var ext = string.IsNullOrEmpty(fileName) ? "" : Path.GetExtension(fileName);
+        if (ext.Length == 0 ? requireExtension : !AllowedExtensions.Contains(ext))
+            throw new ImageLoadException(UnsupportedTypeMessage);
+    }
+
+    /// <summary>Akışı en fazla <paramref name="maxBytes"/> bayt okur; aşılırsa reddeder. Aranamayan akışlarda da çalışır.</summary>
+    public static byte[] ReadBounded(Stream stream, long maxBytes = MaxFileBytes)
+    {
+        try
+        {
+            if (stream.CanSeek && stream.Length - stream.Position > maxBytes)
+                throw new ImageLoadException(TooLargeMessage);
+
+            using var ms = new MemoryStream();
+            var buffer = new byte[81920];
+            long total = 0;
+            int n;
+            while ((n = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                total += n;
+                if (total > maxBytes) throw new ImageLoadException(TooLargeMessage);
+                ms.Write(buffer, 0, n);
+            }
+            return ms.ToArray();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ObjectDisposedException)
+        {
+            throw new ImageLoadException("Dosya okunamadı.");
+        }
+    }
+
     public static LoadedImage Load(string path)
     {
         if (!IsSupportedExtension(path))
-            throw new ImageLoadException("Desteklenmeyen dosya türü. Yalnızca PNG, JPG, JPEG ve WebP açılabilir.");
+            throw new ImageLoadException(UnsupportedTypeMessage);
         byte[] data;
         try
         {
             if (new FileInfo(path).Length > MaxFileBytes)
-                throw new ImageLoadException("Dosya çok büyük (en fazla 100 MB).");
+                throw new ImageLoadException(TooLargeMessage);
             data = File.ReadAllBytes(path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

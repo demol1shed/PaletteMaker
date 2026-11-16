@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Uyarlanabilir simgenin ön katmanı: 108dp tuval, içerik ortadaki 66dp güvenli alanda (dört palet karosu). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="108dp" android:height="108dp"
+        android:viewportWidth="108" android:viewportHeight="108">
+  <path android:fillColor="#FFE63946" android:pathData="M37.5,32.5h10a5,5 0 0 1 5,5v10a5,5 0 0 1 -5,5h-10a5,5 0 0 1 -5,-5v-10a5,5 0 0 1 5,-5z" />
+  <path android:fillColor="#FFF4A261" android:pathData="M60.5,32.5h10a5,5 0 0 1 5,5v10a5,5 0 0 1 -5,5h-10a5,5 0 0 1 -5,-5v-10a5,5 0 0 1 5,-5z" />
+  <path android:fillColor="#FF2A9D8F" android:pathData="M37.5,55.5h10a5,5 0 0 1 5,5v10a5,5 0 0 1 -5,5h-10a5,5 0 0 1 -5,-5v-10a5,5 0 0 1 5,-5z" />
+  <path android:fillColor="#FFE9C46A" android:pathData="M60.5,55.5h10a5,5 0 0 1 5,5v10a5,5 0 0 1 -5,5h-10a5,5 0 0 1 -5,-5v-10a5,5 0 0 1 5,-5z" />
+</vector>

@@ -1,0 +1,168 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PaletteMaker.ViewModels"
+             xmlns:views="using:PaletteMaker.Views"
+             x:Class="PaletteMaker.Views.MainView"
+             x:DataType="vm:MainViewModel">
+
+  <!--
+    Tek görünüm, iki düzen. Genişlik NarrowBreakpoint'in (600) altına inince code-behind köke "narrow"
+    sınıfını ekler; aşağıdaki ".narrow" stilleri telefon düzenini kurar. Palet sütun sayısı da
+    genişlikten hesaplanır (SwatchColumns).
+  -->
+  <UserControl.Styles>
+    <!-- Düzene göre değişen değerler burada (stilde) durur: yerel değer verilirse ".narrow" stili onu ezemez. -->
+    <Style Selector="StackPanel#Page">
+      <Setter Property="Margin" Value="20" />
+    </Style>
+    <Style Selector="TextBlock#TitleText">
+      <Setter Property="FontSize" Value="24" />
+    </Style>
+    <Style Selector="Border#DropZone">
+      <Setter Property="Height" Value="230" />
+    </Style>
+    <Style Selector="UniformGrid#Settings">
+      <Setter Property="Columns" Value="2" />
+    </Style>
+    <Style Selector="RadioButton.mode">
+      <Setter Property="Padding" Value="8,6,14,6" />
+    </Style>
+    <Style Selector="Border.valueChip">
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style Selector="Grid#Root.narrow StackPanel#Page">
+      <Setter Property="Margin" Value="16" />
+    </Style>
+    <Style Selector="Grid#Root.narrow TextBlock#TitleText">
+      <Setter Property="FontSize" Value="20" />
+    </Style>
+    <Style Selector="Grid#Root.narrow Border#DropZone">
+      <Setter Property="Height" Value="200" />
+    </Style>
+    <Style Selector="Grid#Root.narrow UniformGrid#Settings">
+      <Setter Property="Columns" Value="1" />
+    </Style>
+    <!-- Yatay tutulan telefon gibi alçak ekranlar: görsel alanı palete yer bıraksın. -->
+    <Style Selector="Grid#Root.short Border#DropZone">
+      <Setter Property="Height" Value="150" />
+    </Style>
+    <!-- Dokunma hedefleri: dar düzende en az 40 px. -->
+    <Style Selector="Grid#Root.narrow RadioButton.mode">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector="Grid#Root.narrow Button#CopyAllButton">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector="Grid#Root.narrow Border.valueChip">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid x:Name="Root" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+    <ScrollViewer x:Name="PageScroll" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel x:Name="Page" Spacing="14" MaxWidth="1100">
+
+        <!-- Başlık + RGB/CMYK geçişi -->
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock x:Name="TitleText" Text="Palet Çıkarıcı" FontWeight="SemiBold"
+                     VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+            <RadioButton GroupName="mode" Content="RGB" IsChecked="{Binding IsRgb}" Classes="mode" />
+            <RadioButton GroupName="mode" Content="CMYK" IsChecked="{Binding UseCmyk}" Classes="mode" />
+          </StackPanel>
+        </Grid>
+
+        <!-- Görsel alanı. Tapped kullanılır: PointerPressed dokunmatik ekranda sayfayı kaydırırken de tetiklenir. -->
+        <Border x:Name="DropZone" CornerRadius="12" BorderThickness="2"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                DragDrop.AllowDrop="True" Cursor="Hand" ClipToBounds="True"
+                Tapped="OnPickTapped">
+          <Grid>
+            <Image Source="{Binding Preview}" Stretch="Uniform" Margin="8" />
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" Margin="16"
+                        IsVisible="{Binding !HasImage}">
+              <TextBlock FontSize="16" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                         Text="{OnPlatform Default='Görseli buraya sürükle ya da seçmek için tıkla', Android='Görsel seçmek için dokun'}" />
+              <TextBlock Text="PNG, JPG, JPEG, WebP" Opacity="0.6" HorizontalAlignment="Center" />
+            </StackPanel>
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" VerticalAlignment="Bottom" />
+          </Grid>
+        </Border>
+
+        <!-- Ayarlar: genişte yan yana, darda alt alta -->
+        <UniformGrid x:Name="Settings" ColumnSpacing="24" RowSpacing="10">
+          <StackPanel Spacing="2">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="En fazla renk" />
+              <TextBlock Grid.Column="1" Text="{Binding MaxColorsText}" FontWeight="SemiBold" />
+            </Grid>
+            <Slider Minimum="2" Maximum="24" TickFrequency="1" IsSnapToTickEnabled="True"
+                    Value="{Binding MaxColors}" />
+          </StackPanel>
+          <StackPanel Spacing="2">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="Ton birleştirme" />
+              <TextBlock Grid.Column="1" Text="az ↔ çok" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
+            </Grid>
+            <Slider Minimum="0" Maximum="1" Value="{Binding MergeStrength}" />
+          </StackPanel>
+        </UniformGrid>
+
+        <!-- Dosya adı + tümünü kopyala -->
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+          <TextBlock Text="{Binding FileName}" Opacity="0.7" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+          <Button x:Name="CopyAllButton" Grid.Column="1" Content="Tümünü kopyala" VerticalContentAlignment="Center"
+                  IsEnabled="{Binding HasPalette}" Click="OnCopyAll" />
+        </Grid>
+
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="IndianRed" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+        <!-- Palet: eşit genişlikte sütunlar, kartlar boşluğu doldurur -->
+        <ItemsControl x:Name="SwatchList" ItemsSource="{Binding Swatches}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Columns="{Binding $parent[views:MainView].SwatchColumns}"
+                           ColumnSpacing="12" RowSpacing="12" VerticalAlignment="Top" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:SwatchViewModel">
+              <Border Classes="swatch" Padding="8" CornerRadius="12" Cursor="Hand"
+                      Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                      Tapped="OnSwatchTapped">
+                <StackPanel Spacing="6">
+                  <Border Height="80" CornerRadius="8" Background="{Binding Brush}"
+                          BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                    <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontFamily="monospace" />
+                    <TextBlock Grid.Column="1" Text="{Binding ShareText}" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
+                  </Grid>
+                  <Border Classes="valueChip" CornerRadius="8" Padding="8,4"
+                          Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                          Tapped="OnValueTapped">
+                    <TextBlock Text="{Binding ValueText}" FontSize="12" Opacity="0.9" TextWrapping="Wrap"
+                               VerticalAlignment="Center" />
+                  </Border>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock FontSize="12" Opacity="0.6" TextWrapping="Wrap"
+                   Text="{OnPlatform Default='Karta tıkla: hex kopyalanır. Değer satırına tıkla: RGB/CMYK kopyalanır. CMYK, profilsiz yaklaşık değerdir.', Android='Karta dokun: hex kopyalanır. Değer satırına dokun: RGB/CMYK kopyalanır. CMYK yaklaşık değerdir.'}" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Kopyalama bildirimi: içeriğin üstünde, alt ortada -->
+    <Border x:Name="Toast" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="16,0,16,24"
+            Padding="16,10" CornerRadius="20" Background="#E6202020" BorderBrush="#40FFFFFF" BorderThickness="1"
+            IsHitTestVisible="False"
+            IsVisible="{Binding ToastMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding ToastMessage}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+    </Border>
+  </Grid>
+</UserControl>

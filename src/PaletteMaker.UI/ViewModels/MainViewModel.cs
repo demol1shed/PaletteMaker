@@ -48,28 +48,55 @@ public partial class MainViewModel : ObservableObject
         foreach (var s in Swatches) s.UseCmyk = value;
     }
 
-    public async Task LoadAsync(string path)
+    /// <summary>Yerel dosya yolundan yükler (komut satırı, masaüstü seçici/sürükle-bırak). Uzantı zorunludur.</summary>
+    public Task LoadAsync(string path) =>
+        LoadAsync(Path.GetFileName(path), () => Task.FromResult<Stream>(File.OpenRead(path)), requireExtension: true);
+
+    /// <summary>
+    /// Akıştan yükler (Android content:// adresleri, paylaşım). Baytlar bir kez okunur; palet ve önizleme
+    /// aynı baytlardan arka planda üretilir.
+    /// </summary>
+    public async Task LoadAsync(string? name, Func<Task<Stream>> open, bool requireExtension = false)
     {
         int version = ++_loadVersion;
         ErrorMessage = null;
         IsBusy = true;
         try
         {
-            var image = await Task.Run(() => ImageLoader.Load(path));
-            if (version != _loadVersion) return;
-            Bitmap? bmp = null;
-            try
+            var (image, bmp) = await Task.Run(async () =>
             {
-                // Önizleme için tam çözünürlüğü belleğe açma; 800 px genişlikte çöz.
-                using var fs = File.OpenRead(path);
-                bmp = Bitmap.DecodeToWidth(fs, 800);
+                ImageLoader.EnsureSupportedName(name, requireExtension);
+                byte[] data;
+                try
+                {
+                    await using var stream = await open();
+                    data = ImageLoader.ReadBounded(stream);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    throw new ImageLoadException("Dosya okunamadı.");
+                }
+                var decoded = ImageLoader.Decode(data);
+                Bitmap? preview = null;
+                try
+                {
+                    // Önizleme için tam çözünürlüğü belleğe açma; 800 px genişlikte çöz.
+                    using var ms = new MemoryStream(data, writable: false);
+                    preview = Bitmap.DecodeToWidth(ms, 800);
+                }
+                catch { /* önizleme olmasa da palet çıkar */ }
+                return (decoded, preview);
+            });
+            if (version != _loadVersion)
+            {
+                bmp?.Dispose();
+                return;
             }
-            catch { /* önizleme olmasa da palet çıkar */ }
             _image = image;
             var old = Preview;
             Preview = bmp;
             old?.Dispose(); // yenisi atandıktan sonra bırak; ekran bırakılmış bitmap'i çizmesin
-            FileName = Path.GetFileName(path);
+            FileName = name;
             OnPropertyChanged(nameof(HasImage));
             await RecomputeAsync();
         }

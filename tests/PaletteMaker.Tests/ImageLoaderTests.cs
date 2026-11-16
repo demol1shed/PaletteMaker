@@ -107,6 +107,63 @@ public class ImageLoaderTests
         Assert.Contains("çözünürlüğü", ex.Message);
     }
 
+    /// <summary>Android içerik sağlayıcılarının akışları gibi: aranamaz, uzunluğu bilinmez.</summary>
+    private sealed class ForwardOnlyStream(byte[] data) : Stream
+    {
+        private int _pos;
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int n = Math.Min(Math.Min(count, 7), data.Length - _pos); // küçük parçalar halinde gelsin
+            Array.Copy(data, _pos, buffer, offset, n);
+            _pos += n;
+            return n;
+        }
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    [Fact]
+    public void ReadBounded_reads_non_seekable_stream_completely()
+    {
+        var png = TestImages.Encode(TwoColor(64, 64), 64, 64, SKEncodedImageFormat.Png);
+        var read = ImageLoader.ReadBounded(new ForwardOnlyStream(png));
+        Assert.Equal(png, read);
+        Assert.Equal(2, PaletteExtractor.Extract(ImageLoader.Decode(read).Rgba).Count);
+    }
+
+    [Theory]
+    [InlineData(true)] [InlineData(false)]
+    public void ReadBounded_rejects_streams_over_the_limit(bool seekable)
+    {
+        var data = new byte[1001];
+        Stream stream = seekable ? new MemoryStream(data) : new ForwardOnlyStream(data);
+        var ex = Assert.Throws<ImageLoadException>(() => ImageLoader.ReadBounded(stream, maxBytes: 1000));
+        Assert.Contains("büyük", ex.Message);
+        Assert.Equal(1000, ImageLoader.ReadBounded(new MemoryStream(new byte[1000]), maxBytes: 1000).Length);
+    }
+
+    [Theory]
+    [InlineData(null)] [InlineData("")] [InlineData("1000012345")] [InlineData("foto.JPG")] [InlineData("a.webp")]
+    public void Stream_names_without_or_with_supported_extension_are_accepted(string? name) =>
+        ImageLoader.EnsureSupportedName(name);
+
+    [Theory]
+    [InlineData("a.gif")] [InlineData("a.heic")] [InlineData("belge.pdf")]
+    public void Stream_names_with_unsupported_extension_are_rejected(string name) =>
+        Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName(name));
+
+    [Theory]
+    [InlineData(null)] [InlineData("a")] [InlineData("a.gif")]
+    public void Local_paths_require_a_supported_extension(string? name) =>
+        Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName(name, requireExtension: true));
+
     private static void WriteBigEndian(byte[] b, int at, uint v)
     {
         b[at] = (byte)(v >> 24); b[at + 1] = (byte)(v >> 16); b[at + 2] = (byte)(v >> 8); b[at + 3] = (byte)v;

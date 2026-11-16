@@ -1,18 +1,20 @@
 # 🎨 PaletteMaker
 
-**Drop in an image, get its color palette.** A small, fast desktop app for Linux and Windows 11 that pulls the dominant colors out of any PNG, JPEG or WebP image and shows each one as a swatch with a copy-ready hex code, switchable between **RGB** and **CMYK**.
+**Drop in an image, get its color palette.** A small, fast app for Linux, Windows 11 and Android that pulls the dominant colors out of any PNG, JPEG or WebP image and shows each one as a swatch with a copy-ready hex code, switchable between **RGB** and **CMYK**.
 
 > The app's interface is currently in Turkish.
 
 ## Features
 
 - **Drag & drop** an image onto the window, or click to pick a file. You can also pass a path on the command line.
+- **On Android:** tap to pick an image, or use *Share* / *Open with* from your gallery to send one straight to the app. No permissions are requested.
+- **One adaptive layout:** the same screen rearranges itself for phones, tablets and desktop windows.
 - **Palette swatches** with hex code, RGB or CMYK value, and the share of the image each color covers.
 - **One-click copy:** click a swatch to copy its hex code, click the value line to copy the RGB/CMYK text, or copy every hex code at once.
 - **RGB ⇄ CMYK toggle** for the value shown under each swatch.
 - **Sane limits for busy images:** choose the maximum number of colors (2–24, default 10). Many near-identical shades of one color are merged into a single average tone, with an adjustable **merge strength**.
 - **Deterministic:** the same image always produces the same palette.
-- **Single-file builds** for Linux and Windows, no installer and no runtime to install.
+- **Single-file builds** for Linux and Windows, no installer and no runtime to install. Android builds as a self-contained APK.
 
 Supported formats: **PNG, JPG/JPEG, WebP.** Files are validated by their actual content, not just the extension.
 
@@ -24,8 +26,11 @@ Grab the latest build from the [Releases](../../releases) page:
 |---|---|---|
 | Windows 11 (x64) | `PaletteMaker-win-x64.zip` | Unzip, run `PaletteMaker.exe` |
 | Linux (x64) | `PaletteMaker-linux-x64.tar.gz` | `tar xzf PaletteMaker-linux-x64.tar.gz && ./PaletteMaker` |
+| Android 8.0+ (arm64) | `PaletteMaker-android-arm64.apk` | Open the file on your phone and allow installing from this source |
 
 Each release also lists SHA-256 checksums (`SHA256SUMS.txt`). Verify your download with `sha256sum -c SHA256SUMS.txt` (Linux) or `Get-FileHash` (PowerShell).
+
+**Android note:** the APK is signed with a generic debug key, not a release key, so Play Protect may warn about an unknown developer, and a later release signed with a different key cannot update it in place (uninstall first). The app requests no permissions.
 
 **Windows note:** the executable is not code-signed, so SmartScreen may warn you. Click *More info → Run anyway*. On first start the single-file app unpacks its native libraries to a temp folder, which can take a moment.
 
@@ -60,19 +65,43 @@ dotnet publish src/PaletteMaker -c Release -r win-x64 --self-contained \
 # use -r linux-x64 -o dist/linux-x64 for Linux
 ```
 
+### Android
+
+The Android app needs the .NET `android` workload, an Android SDK and a JDK. It is deliberately left out of `PaletteMaker.slnx`, so the commands above keep working without any of them.
+
+```bash
+dotnet workload install android
+
+# One-time: download the Android SDK components and a JDK into directories of your choice (absolute paths)
+dotnet build src/PaletteMaker.Android -t:InstallAndroidDependencies -f net10.0-android \
+  -p:AndroidSdkDirectory=$HOME/Android/Sdk -p:JavaSdkDirectory=$HOME/.local/share/jdk-21 \
+  -p:AcceptAndroidSDKLicenses=True
+
+# Build an installable APK (arm64, Android 8.0+)
+dotnet publish src/PaletteMaker.Android -c Release -f net10.0-android -o dist/android \
+  -p:AndroidSdkDirectory=$HOME/Android/Sdk -p:JavaSdkDirectory=$HOME/.local/share/jdk-21
+```
+
+To avoid repeating the two `-p:` paths, put them in `src/PaletteMaker.Android/PaletteMaker.Android.csproj.user` (git-ignored) as `<AndroidSdkDirectory>` and `<JavaSdkDirectory>` properties.
+
+The result is `dist/android/io.github.demol1shed.palettemaker-Signed.apk`, signed with the local debug key: fine for installing on your own phone (`adb install -r <apk>` or copy it over and open it), not for distribution. Use the Release build for that; a Debug APK relies on fast deployment and will not start when copied to a device by hand.
+
 ## Project layout
 
 ```
-src/PaletteMaker.Core/   UI-independent library: image loading, OKLab/CMYK math, palette extraction
-src/PaletteMaker/        Avalonia 12 desktop app (MVVM)
-tests/PaletteMaker.Tests/  xUnit tests
+src/PaletteMaker.Core/        UI-independent library: image loading, OKLab/CMYK math, palette extraction
+src/PaletteMaker.UI/          Shared Avalonia 12 UI (MVVM): the one adaptive screen and its view models
+src/PaletteMaker/             Desktop launcher (Linux, Windows)
+src/PaletteMaker.Android/     Android launcher: activity, share/open-with handling, icon
+tests/PaletteMaker.Tests/     xUnit tests for the core library
+tests/PaletteMaker.UI.Tests/  Headless layout tests; they also write phone/tablet/desktop screenshots
 ```
 
 Built with C#, .NET 10, [Avalonia UI](https://avaloniaui.net/) and [SkiaSharp](https://github.com/mono/SkiaSharp).
 
 ## Security notes
 
-Images are decoded by Skia's native codecs. To limit abuse, files over 100 MB or over about 100 megapixels are rejected before decoding, and only PNG/JPEG/WebP content is accepted. The app makes no network connections. Please report vulnerabilities privately through GitHub's *Security → Report a vulnerability* rather than a public issue.
+Images are decoded by Skia's native codecs. To limit abuse, files over 100 MB or over about 100 megapixels are rejected before decoding, and only PNG/JPEG/WebP content is accepted. The app makes no network connections, and the Android build requests no permissions. Please report vulnerabilities privately through GitHub's *Security → Report a vulnerability* rather than a public issue.
 
 ## License
 

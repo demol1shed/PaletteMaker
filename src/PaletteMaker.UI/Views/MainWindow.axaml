@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:PaletteMaker.Views"
+        x:Class="PaletteMaker.Views.MainWindow"
+        Title="Palet Çıkarıcı"
+        Width="940" Height="700" MinWidth="360" MinHeight="480"
+        WindowStartupLocation="CenterScreen">
+  <!-- Masaüstü kabuğu. Tüm arayüz MainView'dadır; Android aynı görünümü penceresiz kullanır. -->
+  <views:MainView />
+</Window>

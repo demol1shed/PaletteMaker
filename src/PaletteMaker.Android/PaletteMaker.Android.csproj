@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Android başlatıcı. Arayüzün tamamı PaletteMaker.UI'dadır. Bu proje bilerek PaletteMaker.slnx'te yoktur:
+    kökteki "dotnet build" / "dotnet test" android workload'ı gerektirmesin. Derleme: README'ye bakın.
+    Android SDK / JDK konumları PaletteMaker.Android.csproj.user dosyasından (git dışı) ya da
+    -p:AndroidSdkDirectory=… -p:JavaSdkDirectory=… ile verilir.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
+    <!-- "PaletteMaker.Android" ad alanı, genel "Android.*" ad alanlarını gölgelerdi. -->
+    <RootNamespace>PaletteMaker.Droid</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationId>io.github.demol1shed.palettemaker</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.2.0</ApplicationDisplayVersion>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <!-- Telefonlar arm64; x64 yalnızca emülatör için ve Release paketini büyütmesin diye Debug'da. -->
+    <RuntimeIdentifiers Condition="'$(Configuration)' == 'Release'">android-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(Configuration)' != 'Release'">android-arm64;android-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PaletteMaker.UI\PaletteMaker.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Android" Version="12.1.6" />
+  </ItemGroup>
+</Project>
