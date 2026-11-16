@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PaletteMaker.Core/PaletteMaker.Core.csproj" />
+    <Project Path="src/PaletteMaker/PaletteMaker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PaletteMaker.Tests/PaletteMaker.Tests.csproj" />
+  </Folder>
+</Solution>
