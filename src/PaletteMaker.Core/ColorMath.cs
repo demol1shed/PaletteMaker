@@ -61,6 +61,48 @@ public static class ColorMath
 
     private static int Pct(double v) => (int)Math.Round(v * 100, MidpointRounding.AwayFromZero);
 
+    /// <summary>sRGB → HSL: ton 0–359°, doygunluk ve açıklık 0–100 (yuvarlanmış).</summary>
+    public static (int H, int S, int L) ToHsl(byte r, byte g, byte b)
+    {
+        double rf = r / 255.0, gf = g / 255.0, bf = b / 255.0;
+        double max = Math.Max(rf, Math.Max(gf, bf)), min = Math.Min(rf, Math.Min(gf, bf));
+        double d = max - min, l = (max + min) / 2, h = 0, s = 0;
+        if (d > 1e-12)
+        {
+            s = d / (1 - Math.Abs(2 * l - 1));
+            if (max == rf) h = ((gf - bf) / d) % 6;
+            else if (max == gf) h = (bf - rf) / d + 2;
+            else h = (rf - gf) / d + 4;
+            h *= 60;
+            if (h < 0) h += 360;
+        }
+        int hi = (int)Math.Round(h, MidpointRounding.AwayFromZero) % 360;
+        return (hi, Pct(s), Pct(l));
+    }
+
+    /// <summary>sRGB → OKLCH (CSS Color 4): açıklık 0–1, kroma ≥ 0, ton 0–360°. Renksizde ton 0.</summary>
+    public static (double L, double C, double H) ToOklch(byte r, byte g, byte b)
+    {
+        var lab = RgbToOklab(r, g, b);
+        double c = Math.Sqrt(lab.A * lab.A + lab.B * lab.B);
+        double h = c < 1e-4 ? 0 : Math.Atan2(lab.B, lab.A) * 180.0 / Math.PI;
+        if (h < 0) h += 360;
+        return (lab.L, c < 1e-4 ? 0 : c, h);
+    }
+
+    public static string FormatHsl(byte r, byte g, byte b)
+    {
+        var (h, s, l) = ToHsl(r, g, b);
+        return string.Create(CultureInfo.InvariantCulture, $"hsl({h}, {s}%, {l}%)");
+    }
+
+    /// <summary>CSS biçimi: <c>oklch(62.8% 0.258 29.2)</c> (açıklık yüzde, 1 ondalık; kroma 3; ton 1).</summary>
+    public static string FormatOklch(byte r, byte g, byte b)
+    {
+        var (l, c, h) = ToOklch(r, g, b);
+        return string.Create(CultureInfo.InvariantCulture, $"oklch({l * 100:0.#}% {c:0.###} {h:0.#})");
+    }
+
     public static string FormatRgb(byte r, byte g, byte b) =>
         string.Create(CultureInfo.InvariantCulture, $"rgb({r}, {g}, {b})");
 

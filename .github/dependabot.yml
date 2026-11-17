@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directories:
+      - "/src/*"
+      - "/tests/*"
+    schedule:
+      interval: weekly
+    groups:
+      avalonia:
+        patterns: ["Avalonia*"]
+      android:
+        patterns: ["Xamarin.*"]
+      test:
+        patterns: ["xunit*", "Microsoft.NET.Test.Sdk"]
+    ignore:
+      # SkiaSharp sürümü, Avalonia.Skia'nın bağımlı olduğu sürümle AYNI olmalı (CLAUDE.md); Avalonia güncellenince elle eşitlenir.
+      - dependency-name: "SkiaSharp*"
+      - dependency-name: "HarfBuzzSharp*"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

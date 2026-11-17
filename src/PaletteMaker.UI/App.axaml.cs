@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using PaletteMaker.Sharing;
 using PaletteMaker.ViewModels;
 using PaletteMaker.Views;
 
@@ -20,6 +21,9 @@ public partial class App : Application
     /// Boşsa sayfada reklam alanı hiç oluşturulmaz.
     /// </summary>
     public static Func<Control>? AdControlFactory { get; set; }
+
+    /// <summary>Platformun paylaşım menüsü (Android). Boşsa PNG "Farklı kaydet" iletişim kutusuyla kaydedilir.</summary>
+    public static IShareService? ShareService { get; set; }
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 

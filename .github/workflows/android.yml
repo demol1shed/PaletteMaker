@@ -1,0 +1,55 @@
+name: Android
+
+# Android başlatıcısının iki varyantını (varsayılan ve Google Play, Debug) derler; derleme bozulmalarını yakalar.
+# Hiçbir paket yüklenmez ve hiçbir sır gerekmez: Play paketi Google'ın test kimlikleriyle derlenir.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/PaletteMaker.Android/**"
+      - "src/PaletteMaker.UI/**"
+      - "src/PaletteMaker.Core/**"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "src/PaletteMaker.Android/**"
+      - "src/PaletteMaker.UI/**"
+      - "src/PaletteMaker.Core/**"
+      - ".github/workflows/android.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ANDROID_SDK_DIR: ${{ github.workspace }}/.android-sdk
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install the Android workload
+        run: dotnet workload install android
+      - name: Install Android SDK components
+        run: >
+          dotnet build src/PaletteMaker.Android -t:InstallAndroidDependencies -f net10.0-android
+          -p:AndroidSdkDirectory="$ANDROID_SDK_DIR" -p:AcceptAndroidSDKLicenses=True
+      - name: Build (default variant, no ads, no permissions)
+        run: >
+          dotnet build src/PaletteMaker.Android -c Debug -f net10.0-android
+          -p:AndroidSdkDirectory="$ANDROID_SDK_DIR"
+      - name: Build (Google Play variant)
+        run: >
+          dotnet build src/PaletteMaker.Android -c Debug -f net10.0-android -p:Store=play
+          -p:AndroidSdkDirectory="$ANDROID_SDK_DIR"

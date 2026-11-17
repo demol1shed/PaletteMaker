@@ -53,7 +53,7 @@ public class ImageLoaderTests
     public void Unsupported_extensions_are_rejected(string name)
     {
         Assert.False(ImageLoader.IsSupportedExtension(name));
-        Assert.Throws<ImageLoadException>(() => ImageLoader.Load(name));
+        Assert.Equal(ImageLoadError.UnsupportedType, Assert.Throws<ImageLoadException>(() => ImageLoader.Load(name)).Kind);
     }
 
     [Theory]
@@ -76,13 +76,13 @@ public class ImageLoaderTests
         var gif = Convert.FromBase64String("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
         var path = Path.Combine(Path.GetTempPath(), $"pm-{Guid.NewGuid():N}.png");
         File.WriteAllBytes(path, gif);
-        try { Assert.Throws<ImageLoadException>(() => ImageLoader.Load(path)); }
+        try { Assert.Equal(ImageLoadError.NotAnImage, Assert.Throws<ImageLoadException>(() => ImageLoader.Load(path)).Kind); }
         finally { File.Delete(path); }
     }
 
     [Fact]
     public void Garbage_bytes_are_rejected() =>
-        Assert.Throws<ImageLoadException>(() => ImageLoader.Decode(new byte[] { 1, 2, 3, 4, 5 }));
+        Assert.Equal(ImageLoadError.NotAnImage, Assert.Throws<ImageLoadException>(() => ImageLoader.Decode(new byte[] { 1, 2, 3, 4, 5 })).Kind);
 
     [Fact]
     public void Jpeg_large_image_is_downscaled_to_max_edge()
@@ -104,7 +104,7 @@ public class ImageLoaderTests
         WriteBigEndian(png, 20, 60000);
         WriteBigEndian(png, 29, Crc32(png.AsSpan(12, 17)));
         var ex = Assert.Throws<ImageLoadException>(() => ImageLoader.Decode(png));
-        Assert.Contains("çözünürlüğü", ex.Message);
+        Assert.Equal(ImageLoadError.ResolutionTooHigh, ex.Kind);
     }
 
     /// <summary>Android içerik sağlayıcılarının akışları gibi: aranamaz, uzunluğu bilinmez.</summary>
@@ -145,7 +145,7 @@ public class ImageLoaderTests
         var data = new byte[1001];
         Stream stream = seekable ? new MemoryStream(data) : new ForwardOnlyStream(data);
         var ex = Assert.Throws<ImageLoadException>(() => ImageLoader.ReadBounded(stream, maxBytes: 1000));
-        Assert.Contains("büyük", ex.Message);
+        Assert.Equal(ImageLoadError.TooLarge, ex.Kind);
         Assert.Equal(1000, ImageLoader.ReadBounded(new MemoryStream(new byte[1000]), maxBytes: 1000).Length);
     }
 
@@ -157,12 +157,30 @@ public class ImageLoaderTests
     [Theory]
     [InlineData("a.gif")] [InlineData("a.heic")] [InlineData("belge.pdf")]
     public void Stream_names_with_unsupported_extension_are_rejected(string name) =>
-        Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName(name));
+        Assert.Equal(ImageLoadError.UnsupportedType, Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName(name)).Kind);
+
+    [Theory]
+    [InlineData("IMG_1.heic")] [InlineData("foto.HEIC")] [InlineData("a.avif")] [InlineData("a.Bmp")]
+    public void Extra_extensions_are_accepted_only_when_the_platform_can_convert_them(string name)
+    {
+        string[] extras = [".heic", ".heif", ".avif", ".bmp"];
+        ImageLoader.EnsureSupportedName(name, extraExtensions: extras);
+        Assert.Equal(ImageLoadError.UnsupportedType, Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName(name)).Kind);
+    }
+
+    [Fact]
+    public void Extra_extensions_do_not_widen_anything_else()
+    {
+        string[] extras = [".heic"];
+        Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName("belge.pdf", extraExtensions: extras));
+        Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName("a.exe", extraExtensions: extras));
+        ImageLoader.EnsureSupportedName("a.png", extraExtensions: extras); // temel biçimler hep geçer
+    }
 
     [Theory]
     [InlineData(null)] [InlineData("a")] [InlineData("a.gif")]
     public void Local_paths_require_a_supported_extension(string? name) =>
-        Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName(name, requireExtension: true));
+        Assert.Equal(ImageLoadError.UnsupportedType, Assert.Throws<ImageLoadException>(() => ImageLoader.EnsureSupportedName(name, requireExtension: true)).Kind);
 
     private static void WriteBigEndian(byte[] b, int at, uint v)
     {

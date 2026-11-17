@@ -16,7 +16,7 @@ namespace PaletteMaker.Droid;
 /// sürükle-bırakın karşılığıdır.
 /// </summary>
 [Activity(
-    Label = "Palet Çıkarıcı",
+    Label = "@string/app_name",
     Theme = "@style/AppTheme",
     Icon = "@mipmap/ic_launcher",
     MainLauncher = true,
@@ -28,18 +28,24 @@ namespace PaletteMaker.Droid;
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.UiMode | ConfigChanges.Density
                            | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
 [IntentFilter([Intent.ActionSend], Categories = [Intent.CategoryDefault],
-    DataMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"])]
+    DataMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif", "image/avif", "image/gif", "image/bmp"])]
 [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataScheme = "content",
-    DataMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"])]
+    DataMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif", "image/avif", "image/gif", "image/bmp"])]
 public class MainActivity : AvaloniaMainActivity
 {
 #if PLAY_STORE
     private PaletteMaker.Droid.Monetization.PlayMonetization? _monetization;
     private PaletteMaker.Droid.Monetization.AdBannerHost? _banner;
+    private PaletteMaker.Droid.Monetization.PlayReviewPrompt? _review;
 #endif
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        // Sistem paylaşım menüsü ("Palet görselini paylaş"); görünüm oluşmadan önce atanır.
+        App.ShareService = new PaletteMaker.Droid.Sharing.AndroidShareService(this);
+        // HEIC/AVIF/GIF/BMP: Skia açamaz, Android'in sistem çözücüsü PNG'ye çevirir.
+        if (Avalonia.Application.Current is App imagingApp)
+            imagingApp.MainVm.Transcoder = new PaletteMaker.Droid.Imaging.AndroidImageTranscoder();
 #if PLAY_STORE
         // Google Play sürümü: reklam ve satın alma. Görünüm (base.OnCreate) oluşmadan önce bağlanmalı,
         // çünkü MainViewFactory orada çağrılır. GitHub / kendi derlemede bu blok derlenmez.
@@ -49,6 +55,7 @@ public class MainActivity : AvaloniaMainActivity
             playApp.MainVm.Monetization = monetization;
             App.AdControlFactory = () => _banner = new PaletteMaker.Droid.Monetization.AdBannerHost(this, monetization.BannerUnitId);
             monetization.Start();
+            _review = new PaletteMaker.Droid.Monetization.PlayReviewPrompt(this, playApp.MainVm);
         }
 #endif
         base.OnCreate(savedInstanceState);
@@ -66,6 +73,8 @@ public class MainActivity : AvaloniaMainActivity
             playApp.MainVm.Monetization = PaletteMaker.Monetization.NullMonetization.Instance;
         _monetization?.Dispose();
         _monetization = null;
+        _review?.Dispose();
+        _review = null;
         _banner = null;
         base.OnDestroy();
     }

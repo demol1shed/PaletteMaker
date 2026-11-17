@@ -1,0 +1,54 @@
+name: Release
+
+# "v*" etiketi itildiğinde Windows ve Linux tek dosyalı yayınlarını derler ve GitHub Release'e ekler.
+# Android yalnızca Google Play'den dağıtılır (burada APK yok).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test -c Release --nologo
+
+      - name: Publish
+        run: |
+          for rid in win-x64 linux-x64; do
+            dotnet publish src/PaletteMaker -c Release -r "$rid" --self-contained \
+              -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+              -p:DebugType=None -p:DebugSymbols=false -o "dist/$rid"
+          done
+
+      - name: Package
+        run: |
+          mkdir -p dist/release
+          (cd dist/win-x64 && zip -9 ../release/PaletteMaker-win-x64.zip PaletteMaker.exe)
+          tar czf dist/release/PaletteMaker-linux-x64.tar.gz -C dist/linux-x64 PaletteMaker
+          (cd dist/release && sha256sum PaletteMaker-win-x64.zip PaletteMaker-linux-x64.tar.gz > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - name: Smoke test the Linux build
+        run: |
+          mkdir smoke && tar xzf dist/release/PaletteMaker-linux-x64.tar.gz -C smoke
+          file smoke/PaletteMaker | grep -q "ELF 64-bit"
+
+      - name: Create or update the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files=(dist/release/PaletteMaker-win-x64.zip dist/release/PaletteMaker-linux-x64.tar.gz dist/release/SHA256SUMS.txt)
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${files[@]}" --title "$GITHUB_REF_NAME" --generate-notes
+          fi

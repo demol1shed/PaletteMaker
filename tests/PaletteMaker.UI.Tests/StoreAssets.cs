@@ -4,6 +4,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using System.Globalization;
 using PaletteMaker.ViewModels;
 using PaletteMaker.Views;
 using SkiaSharp;
@@ -14,7 +15,7 @@ namespace PaletteMaker.UI.Tests;
 /// <summary>
 /// Google Play mağaza görsellerini üretir: 512×512 simge, 1024×500 öne çıkan grafik ve 1080×2160 telefon ekran
 /// görüntüleri (gerçek MainView, 3× ölçekli). Yalnızca <c>PALETTE_STORE_ASSETS=1</c> iken çalışır, çıktı
-/// <c>store/graphics/</c> altına yazılır:
+/// <c>store/graphics/</c> altına yazılır (simge ortak, grafik ve ekran görüntüleri <c>tr/</c> ve <c>en/</c> alt klasörlerinde):
 /// <c>PALETTE_STORE_ASSETS=1 dotnet test tests/PaletteMaker.UI.Tests --filter StoreAssets</c>
 /// </summary>
 public class StoreAssets
@@ -91,45 +92,61 @@ public class StoreAssets
             Save(icon, Path.Combine(dir, "icon-512.png"));
         }
 
-        // 1024×500 öne çıkan grafik (alfa yok).
-        using (var fg = new SKBitmap(new SKImageInfo(1024, 500, SKColorType.Rgba8888, SKAlphaType.Opaque)))
-        using (var c = new SKCanvas(fg))
+        var old = CultureInfo.CurrentUICulture;
+        try
         {
-            using (var bg = new SKPaint { Shader = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(1024, 500), [Navy, new SKColor(0x2A, 0x3F, 0x6E)], null, SKShaderTileMode.Clamp) })
-                c.DrawRect(0, 0, 1024, 500, bg);
-            DrawTiles(c, 590, 20, 5.2f);
-            using var title = new SKPaint { Color = SKColors.White, IsAntialias = true, TextSize = 64, Typeface = SKTypeface.FromFamilyName("Inter", SKFontStyle.Bold) ?? SKTypeface.Default };
-            using var sub = new SKPaint { Color = new SKColor(0xD6, 0xE2, 0xF2), IsAntialias = true, TextSize = 30, Typeface = SKTypeface.FromFamilyName("Inter") ?? SKTypeface.Default };
-            c.DrawText("Palet Çıkarıcı", 70, 230, title);
-            c.DrawText("Görselden renk paleti", 70, 285, sub);
-            c.DrawText("RGB · CMYK · HEX", 70, 330, sub);
-            Save(fg, Path.Combine(dir, "feature-1024x500.png"));
-        }
+            foreach (var (lang, title1, line2, line3, sampleName) in new[]
+            {
+                ("tr", "Palet Çıkarıcı", "Görselden renk paleti", "RGB · CMYK · HEX", "gun-batimi.png"),
+                ("en", "Palette Extractor", "Colors from any image", "RGB · CMYK · HEX", "sunset.png"),
+            })
+            {
+                CultureInfo.CurrentUICulture = new CultureInfo(lang);
+                var langDir = Path.Combine(dir, lang);
+                Directory.CreateDirectory(langDir);
 
-        // 1080×2160 telefon ekran görüntüleri.
-        var png = SunsetPng();
-        async Task Shot(string name, bool dark, bool cmyk, double scrollFraction)
-        {
-            var vm = new MainViewModel { UseCmyk = cmyk };
-            var view = new MainView { DataContext = vm };
-            var window = new Window { Width = 360, Height = 720, Content = view, RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light };
-            window.Show();
-            window.SetRenderScaling(3);
-            await vm.LoadAsync("gun-batimi.png", () => Task.FromResult<Stream>(new MemoryStream(png)));
-            Dispatcher.UIThread.RunJobs();
-            var scroll = view.FindControl<ScrollViewer>("PageScroll")!;
-            scroll.Offset = new Vector(0, Math.Max(0, (scroll.Extent.Height - scroll.Viewport.Height) * scrollFraction));
-            Dispatcher.UIThread.RunJobs();
-            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
-            Dispatcher.UIThread.RunJobs();
-            using var frame = window.CaptureRenderedFrame();
-            Assert.Equal(1080, frame!.PixelSize.Width);
-            frame.Save(Path.Combine(dir, name + ".png"), new Avalonia.Media.Imaging.PngBitmapEncoderOptions());
-            window.Close();
+                // 1024×500 öne çıkan grafik (alfa yok).
+                using (var fg = new SKBitmap(new SKImageInfo(1024, 500, SKColorType.Rgba8888, SKAlphaType.Opaque)))
+                using (var c = new SKCanvas(fg))
+                {
+                    using (var bg = new SKPaint { Shader = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(1024, 500), [Navy, new SKColor(0x2A, 0x3F, 0x6E)], null, SKShaderTileMode.Clamp) })
+                        c.DrawRect(0, 0, 1024, 500, bg);
+                    DrawTiles(c, 590, 20, 5.2f);
+                    using var title = new SKPaint { Color = SKColors.White, IsAntialias = true, TextSize = 64, Typeface = SKTypeface.FromFamilyName("Inter", SKFontStyle.Bold) ?? SKTypeface.Default };
+                    using var sub = new SKPaint { Color = new SKColor(0xD6, 0xE2, 0xF2), IsAntialias = true, TextSize = 30, Typeface = SKTypeface.FromFamilyName("Inter") ?? SKTypeface.Default };
+                    c.DrawText(title1, 70, 230, title);
+                    c.DrawText(line2, 70, 285, sub);
+                    c.DrawText(line3, 70, 330, sub);
+                    Save(fg, Path.Combine(langDir, "feature-1024x500.png"));
+                }
+
+                // 1080×2160 telefon ekran görüntüleri (gerçek MainView, o dilde).
+                var png = SunsetPng();
+                async Task Shot(string name, bool dark, bool cmyk, double scrollFraction)
+                {
+                    var vm = new MainViewModel { ValueFormat = cmyk ? ValueFormat.Cmyk : ValueFormat.Rgb };
+                    var view = new MainView { DataContext = vm };
+                    var window = new Window { Width = 360, Height = 720, Content = view, RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light };
+                    window.Show();
+                    window.SetRenderScaling(3);
+                    await vm.LoadAsync(sampleName, () => Task.FromResult<Stream>(new MemoryStream(png)));
+                    Dispatcher.UIThread.RunJobs();
+                    var scroll = view.FindControl<ScrollViewer>("PageScroll")!;
+                    scroll.Offset = new Vector(0, Math.Max(0, (scroll.Extent.Height - scroll.Viewport.Height) * scrollFraction));
+                    Dispatcher.UIThread.RunJobs();
+                    AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+                    Dispatcher.UIThread.RunJobs();
+                    using var frame = window.CaptureRenderedFrame();
+                    Assert.Equal(1080, frame!.PixelSize.Width);
+                    frame.Save(Path.Combine(langDir, name + ".png"), new Avalonia.Media.Imaging.PngBitmapEncoderOptions());
+                    window.Close();
+                }
+                await Shot("ekran-1-palet", dark: false, cmyk: false, 0);
+                await Shot("ekran-2-kartlar", dark: false, cmyk: false, 0.6);
+                await Shot("ekran-3-cmyk-koyu", dark: true, cmyk: true, 0.6);
+                await Shot("ekran-4-koyu", dark: true, cmyk: false, 0);
+            }
         }
-        await Shot("ekran-1-palet", dark: false, cmyk: false, 0);
-        await Shot("ekran-2-kartlar", dark: false, cmyk: false, 0.6);
-        await Shot("ekran-3-cmyk-koyu", dark: true, cmyk: true, 0.6);
-        await Shot("ekran-4-koyu", dark: true, cmyk: false, 0);
+        finally { CultureInfo.CurrentUICulture = old; }
     }
 }

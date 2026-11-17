@@ -2,7 +2,7 @@
 
 **Drop in an image, get its color palette.** A small, fast app for Linux, Windows 11 and Android that pulls the dominant colors out of any PNG, JPEG or WebP image and shows each one as a swatch with a copy-ready hex code, switchable between **RGB** and **CMYK**.
 
-> The app's interface is currently in Turkish.
+> The interface is available in **English and Turkish** and follows your device (or system) language; any other language shows English.
 
 ## Features
 
@@ -11,12 +11,13 @@
 - **One adaptive layout:** the same screen rearranges itself for phones, tablets and desktop windows.
 - **Palette swatches** with hex code, RGB or CMYK value, and the share of the image each color covers.
 - **One-click copy:** click a swatch to copy its hex code, click the value line to copy the RGB/CMYK text, or copy every hex code at once.
-- **RGB ⇄ CMYK toggle** for the value shown under each swatch.
+- **RGB, CMYK, HSL or OKLCH** for the value shown under each swatch (one drop-down).
+- **Share and export:** copy the palette as a HEX list, CSS variables, JSON or Android `colors.xml`; save it as a **GIMP / Resprite `.gpl`** palette file (in Resprite: *Menu ▸ Palette ▸ Import RPL/GPL file*); or share/save a PNG image of the palette.
 - **Sane limits for busy images:** choose the maximum number of colors (2–48, default 10). Many near-identical shades of one color are merged into a single average tone, with an adjustable **merge strength**.
 - **Deterministic:** the same image always produces the same palette.
 - **Single-file builds** for Linux and Windows, no installer and no runtime to install. Android builds as a self-contained APK.
 
-Supported formats: **PNG, JPG/JPEG, WebP.** Files are validated by their actual content, not just the extension.
+Supported formats: **PNG, JPG/JPEG, WebP.** Files are validated by their actual content, not just the extension. **On Android** the system decoder additionally converts **HEIC/HEIF** (Android 9+), **AVIF** (Android 12+), GIF and BMP images to PNG first, and the result goes through the same validation.
 
 ## Download
 
@@ -105,7 +106,7 @@ Built with C#, .NET 10, [Avalonia UI](https://avaloniaui.net/) and [SkiaSharp](h
 
 ## Security notes
 
-Images are decoded by Skia's native codecs. To limit abuse, files over 100 MB or over about 100 megapixels are rejected before decoding, and only PNG/JPEG/WebP content is accepted. The app makes no network connections, and the Android build requests no permissions. Please report vulnerabilities privately through GitHub's *Security → Report a vulnerability* rather than a public issue.
+Images are decoded by Skia's native codecs. To limit abuse, files over 100 MB or over about 100 megapixels are rejected before decoding, and only PNG/JPEG/WebP content is accepted (Android converts other formats to PNG with the system decoder first, within the same size limits). The app makes no network connections, and the Android build requests no permissions. Please report vulnerabilities privately through GitHub's *Security → Report a vulnerability* rather than a public issue.
 
 ## License
 

@@ -14,8 +14,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>io.github.demol1shed.palettemaker</ApplicationId>
-    <ApplicationVersion>3</ApplicationVersion>
-    <ApplicationDisplayVersion>0.4.0</ApplicationDisplayVersion>
+    <ApplicationVersion>4</ApplicationVersion>
+    <ApplicationDisplayVersion>0.5.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <!-- Telefonlar arm64; x64 yalnızca emülatör için ve Release paketini büyütmesin diye Debug'da. -->
@@ -49,6 +49,7 @@
     <PackageReference Include="Xamarin.GooglePlayServices.Ads" Version="125.5.0" />
     <PackageReference Include="Xamarin.Google.UserMessagingPlatform" Version="4.0.0.4" />
     <PackageReference Include="Xamarin.Android.Google.BillingClient" Version="9.1.0.2" />
+    <PackageReference Include="Xamarin.Google.Android.Play.Review" Version="2.0.2.10" />
   </ItemGroup>
   <ItemGroup Condition="'$(Store)' != 'play'">
     <Compile Remove="Monetization\**" />

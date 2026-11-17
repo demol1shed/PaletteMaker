@@ -67,7 +67,7 @@ public class MainViewLayoutTests
     private static async Task<(Window Window, MainView View, MainViewModel Vm)> OpenAsync(
         int width, int height, bool dark, bool loadImage = true, bool cmyk = false)
     {
-        var vm = new MainViewModel { UseCmyk = cmyk };
+        var vm = new MainViewModel { ValueFormat = cmyk ? ValueFormat.Cmyk : ValueFormat.Rgb };
         var view = new MainView { DataContext = vm };
         var window = new Window
         {
@@ -140,7 +140,8 @@ public class MainViewLayoutTests
                     $"yatay taşma: içerik {scroll.Extent.Width} > görünür alan {scroll.Viewport.Width}");
 
                 var page = view.FindControl<StackPanel>("Page")!;
-                foreach (var v in page.GetVisualDescendants().OfType<Control>().Where(c => c.IsEffectivelyVisible))
+                // ComboBox şablonunun iç parçaları (açılır liste görünüm kutusu) ekran dışında ölçülür; ComboBox'ın kendisi denetlenir.
+                foreach (var v in page.GetVisualDescendants().OfType<Control>().Where(c => c.IsEffectivelyVisible && c.FindAncestorOfType<ComboBox>() == null))
                 {
                     var b = BoundsIn(v, view);
                     Assert.True(b.Left >= -0.5 && b.Right <= width + 0.5,
@@ -173,8 +174,8 @@ public class MainViewLayoutTests
                     var chips = view.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("valueChip"));
                     Assert.All(chips, c => Assert.True(c.Bounds.Height >= 40, $"değer çipi {c.Bounds.Height} px"));
                     Assert.True(view.FindControl<Button>("CopyAllButton")!.Bounds.Height >= 40);
-                    Assert.All(view.GetVisualDescendants().OfType<RadioButton>(),
-                        r => Assert.True(r.Bounds.Height >= 40, $"RGB/CMYK düğmesi {r.Bounds.Height} px"));
+                    Assert.True(view.FindControl<Button>("ShareButton")!.Bounds.Height >= 40, "Paylaş düğmesi");
+                    Assert.True(view.FindControl<ComboBox>("FormatBox")!.Bounds.Height >= 40, $"biçim menüsü {view.FindControl<ComboBox>("FormatBox")!.Bounds.Height} px");
                 }
 
                 string suffix = dark ? "koyu" : "acik";

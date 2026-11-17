@@ -3,6 +3,8 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PaletteMaker.Monetization;
 using PaletteMaker.Core;
+using PaletteMaker.Imaging;
+using PaletteMaker.Localization;
 
 namespace PaletteMaker.ViewModels;
 
@@ -31,14 +33,29 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _mergeStrength = PaletteOptions.DefaultMergeStrength;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsRgb))]
-    private bool _useCmyk;
+    [NotifyPropertyChangedFor(nameof(FormatIndex))]
+    private ValueFormat _valueFormat = ValueFormat.Rgb;
 
-    public bool IsRgb
+    /// <summary>Başlıktaki açılır menünün seçili sırası (<see cref="ValueFormat"/> ile aynı sıra).</summary>
+    public int FormatIndex
     {
-        get => !UseCmyk;
-        set => UseCmyk = !value;
+        get => (int)ValueFormat;
+        set { if (Enum.IsDefined((ValueFormat)value)) ValueFormat = (ValueFormat)value; }
     }
+
+    /// <summary>
+    /// Platformun HEIC/AVIF gibi ek biçimleri PNG'ye çeviren çözücüsü (yalnızca Android atar). Boşsa yalnızca PNG/JPEG/WebP açılır.
+    /// </summary>
+    public IImageTranscoder? Transcoder { get; set; }
+
+    /// <summary>Yeni bir görselden palet başarıyla çıkınca bir kez tetiklenir (Play değerlendirme sayacı bunu kullanır).</summary>
+    public event EventHandler? PaletteLoaded;
+
+    /// <summary>"Paylaş / dışa aktar" alt sayfası açık mı.</summary>
+    [ObservableProperty] private bool _isExportOpen;
+
+    /// <summary>Şu anki palet (kartlarla aynı sırada: paya göre azalan).</summary>
+    public IReadOnlyList<PaletteColor> Palette { get; private set; } = [];
 
     public string MaxColorsText => ((int)Math.Round(MaxColors)).ToString(System.Globalization.CultureInfo.InvariantCulture);
     public bool HasImage => _image != null;
@@ -47,9 +64,9 @@ public partial class MainViewModel : ObservableObject
     partial void OnMaxColorsChanged(double value) => _ = RecomputeAsync();
     partial void OnMergeStrengthChanged(double value) => _ = RecomputeAsync();
 
-    partial void OnUseCmykChanged(bool value)
+    partial void OnValueFormatChanged(ValueFormat value)
     {
-        foreach (var s in Swatches) s.UseCmyk = value;
+        foreach (var s in Swatches) s.Format = value;
     }
 
     /// <summary>Yerel dosya yolundan yükler (komut satırı, masaüstü seçici/sürükle-bırak). Uzantı zorunludur.</summary>
@@ -69,7 +86,8 @@ public partial class MainViewModel : ObservableObject
         {
             var (image, bmp) = await Task.Run(async () =>
             {
-                ImageLoader.EnsureSupportedName(name, requireExtension);
+                var transcoder = Transcoder;
+                ImageLoader.EnsureSupportedName(name, requireExtension, transcoder?.Extensions);
                 byte[] data;
                 try
                 {
@@ -78,9 +96,21 @@ public partial class MainViewModel : ObservableObject
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
-                    throw new ImageLoadException("Dosya okunamadı.");
+                    throw new ImageLoadException(ImageLoadError.Unreadable, "The file could not be read.");
                 }
-                var decoded = ImageLoader.Decode(data);
+                LoadedImage decoded;
+                try
+                {
+                    decoded = ImageLoader.Decode(data);
+                }
+                catch (ImageLoadException ex) when (ex.Kind == ImageLoadError.NotAnImage && transcoder != null)
+                {
+                    // PNG/JPEG/WebP değil: platform çözücüsüyle PNG'ye çevir ve aynı doğrulamadan geçir.
+                    var png = transcoder.TryConvertToPng(data);
+                    if (png == null) throw;
+                    data = png;
+                    decoded = ImageLoader.Decode(data);
+                }
                 Bitmap? preview = null;
                 try
                 {
@@ -103,14 +133,16 @@ public partial class MainViewModel : ObservableObject
             FileName = name;
             OnPropertyChanged(nameof(HasImage));
             await RecomputeAsync();
+            // Yeni bir görsel için palet gerçekten çıktı (kaydırıcıyla yeniden hesaplamalar ve hatalar sayılmaz).
+            if (version == _loadVersion && Palette.Count > 0) PaletteLoaded?.Invoke(this, EventArgs.Empty);
         }
         catch (ImageLoadException ex)
         {
-            if (version == _loadVersion) ErrorMessage = ex.Message;
+            if (version == _loadVersion) ErrorMessage = ErrorText(ex.Kind);
         }
         catch (Exception)
         {
-            if (version == _loadVersion) ErrorMessage = "Görsel açılırken beklenmeyen bir hata oluştu.";
+            if (version == _loadVersion) ErrorMessage = Loc.Get("ErrUnexpected");
         }
         finally
         {
@@ -134,9 +166,10 @@ public partial class MainViewModel : ObservableObject
             if (cts.IsCancellationRequested) return;
 
             Swatches.Clear();
-            foreach (var c in palette) Swatches.Add(new SwatchViewModel(c, UseCmyk));
+            Palette = palette;
+            foreach (var c in palette) Swatches.Add(new SwatchViewModel(c, ValueFormat));
             OnPropertyChanged(nameof(HasPalette));
-            ErrorMessage = palette.Count == 0 ? "Bu görselde okunabilir renk bulunamadı (tamamen saydam olabilir)." : null;
+            ErrorMessage = palette.Count == 0 ? Loc.Get("ErrNoColors") : null;
         }
         catch (OperationCanceledException) { }
         finally
@@ -155,5 +188,45 @@ public partial class MainViewModel : ObservableObject
         if (_toastCts == cts) ToastMessage = null;
     }
 
-    public string AllHexText() => string.Join("\n", Swatches.Select(s => s.Hex));
+    /// <summary>Core'un hata türünü yerelleştirilmiş kullanıcı metnine çevirir.</summary>
+    public static string ErrorText(ImageLoadError kind) => Loc.Get(kind switch
+    {
+        ImageLoadError.UnsupportedType => "ErrUnsupportedType",
+        ImageLoadError.TooLarge => "ErrTooLarge",
+        ImageLoadError.ResolutionTooHigh => "ErrResolutionTooHigh",
+        ImageLoadError.NotAnImage => "ErrNotAnImage",
+        ImageLoadError.Unreadable => "ErrUnreadable",
+        ImageLoadError.DecodeFailed => "ErrDecodeFailed",
+        ImageLoadError.ResizeFailed => "ErrResizeFailed",
+        _ => "ErrUnexpected",
+    });
+
+    public string AllHexText() => PaletteExport.HexList(Palette);
+
+    /// <summary>Verilen türde palet metni (panoya kopyalama / dosyaya yazma).</summary>
+    public string ExportText(ExportKind kind) => kind switch
+    {
+        ExportKind.Css => PaletteExport.CssVariables(Palette),
+        ExportKind.Json => PaletteExport.Json(Palette),
+        ExportKind.AndroidColorsXml => PaletteExport.AndroidColorsXml(Palette),
+        ExportKind.GimpPalette => PaletteExport.GimpPalette(Palette, BaseFileName),
+        _ => PaletteExport.HexList(Palette),
+    };
+
+    /// <summary>Görsel adından uzantısız, dosya sistemi için güvenli bir ad (yoksa "palette").</summary>
+    public string BaseFileName
+    {
+        get
+        {
+            var name = string.IsNullOrWhiteSpace(FileName) ? "" : Path.GetFileNameWithoutExtension(FileName);
+            var safe = new string(name.Select(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or ' ' ? ch : '_').ToArray()).Trim();
+            return safe.Length == 0 ? "palette" : safe;
+        }
+    }
+
+    /// <summary>Örn. "gun-batimi-palette.gpl".</summary>
+    public string ExportFileName(string extension) => $"{BaseFileName}-palette.{extension}";
+
+    /// <summary>Paletti paylaşılabilir PNG kart olarak çizer (arka planda çağrılması önerilir).</summary>
+    public byte[] RenderCardPng() => PaletteCardRenderer.RenderPng(Palette);
 }

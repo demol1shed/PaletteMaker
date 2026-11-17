@@ -5,7 +5,7 @@
 **Kısa açıklama** (78/80):
 Görselden renk paleti çıkar. HEX, RGB ve CMYK kodlarını tek dokunuşla kopyala.
 
-**Tam açıklama** (1142/4000):
+**Tam açıklama** (1349/4000):
 
 Palet Çıkarıcı, bir fotoğraftan ya da görselden dominant renkleri çıkarıp her biri için kopyalamaya hazır bir kart gösterir.
 
@@ -17,17 +17,18 @@ NASIL ÇALIŞIR
 ÖZELLİKLER
 • 2 ile 48 arasında istediğin kadar renk.
 • Ton birleştirme: birbirine çok yakın tonları tek renkte topla ya da ayrı bırak.
-• RGB ve CMYK arasında geçiş.
-• PNG, JPEG ve WebP desteği.
+• RGB, CMYK, HSL ve OKLCH değerleri arasında geçiş.
+• Paleti dışa aktar: HEX listesi, CSS değişkenleri, JSON, Android colors.xml; GIMP / Resprite için .gpl dosyası; ya da palet görselini (PNG) paylaş.
+• PNG, JPEG ve WebP desteği; ayrıca HEIC/HEIF, AVIF, GIF ve BMP (cihazın sistem çözücüsü destekliyorsa).
 • Sistem temasına uyar: açık ve koyu mod.
 • Aynı görsel her zaman aynı paleti verir.
 • Görselin cihazından çıkmaz: işlem tamamen cihazında yapılır. Hesap ya da konum izni gerekmez.
 
 NOT
-• Uygulamanın arayüzü Türkçedir.
+• Uygulamanın arayüzü Türkçe ve İngilizcedir; cihazının diline uyar.
 • CMYK değerleri profilsiz standart formülle hesaplanır; yaklaşık değerdir, renk doğruluğu gereken baskı işleri için uygun değildir.
 • Uygulama ücretsizdir ve sayfanın sonunda tek bir reklam içerir. Tek seferlik "Reklamları kaldır" satın alımıyla reklamlar kalıcı olarak kapatılabilir.
 
 ---
-Varlıklar: `store/graphics/icon-512.png`, `feature-1024x500.png`, `ekran-1…4.png` (1080×2160).
+Varlıklar: `store/graphics/icon-512.png`, `store/graphics/tr/feature-1024x500.png`, `tr/ekran-1…4.png` (1080×2160).
 Ekran görüntüleri sahte örnek görsel kullanır; gerçek telefondan alınanlarla değiştirmek en iyisidir.

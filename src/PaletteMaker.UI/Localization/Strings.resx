@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Nötr kaynak: İngilizce. "X.Android" anahtarları Android'e özel varyantlardır ve her dilde bulunmalıdır. -->
+  <data name="AppTitle" xml:space="preserve"><value>Palette Extractor</value></data>
+  <data name="DropHint" xml:space="preserve"><value>Drop an image here or click to choose one</value></data>
+  <data name="DropHint.Android" xml:space="preserve"><value>Tap to choose an image</value></data>
+  <data name="Formats" xml:space="preserve"><value>PNG, JPG, JPEG, WebP</value></data>
+  <data name="MaxColorsLabel" xml:space="preserve"><value>Max colors</value></data>
+  <data name="MaxColorsHint" xml:space="preserve"><value>Sets the maximum number of colors in the palette. If the image has fewer colors, the palette is shorter.</value></data>
+  <data name="MergeLabel" xml:space="preserve"><value>Tone merging</value></data>
+  <data name="MergeRange" xml:space="preserve"><value>less ↔ more</value></data>
+  <data name="MergeHint" xml:space="preserve"><value>How strongly near-identical tones are collapsed into one color. Less: similar tones stay separate. More: close tones merge and the palette gets simpler.</value></data>
+  <data name="CopyAll" xml:space="preserve"><value>Copy all</value></data>
+  <data name="CardHint" xml:space="preserve"><value>Click a card to copy its HEX. Click the value line to copy its value (RGB, CMYK, HSL or OKLCH). CMYK is approximate.</value></data>
+  <data name="CardHint.Android" xml:space="preserve"><value>Tap a card to copy its HEX. Tap the value line to copy its value (RGB, CMYK, HSL or OKLCH). CMYK is approximate.</value></data>
+  <data name="PickerTitle" xml:space="preserve"><value>Choose an image</value></data>
+  <data name="PickerFilter" xml:space="preserve"><value>Images</value></data>
+  <data name="ToastHexCopied" xml:space="preserve"><value>{0} copied</value></data>
+  <data name="ToastCopied" xml:space="preserve"><value>Copied</value></data>
+  <data name="ToastAllCopied" xml:space="preserve"><value>All HEX codes copied</value></data>
+  <data name="ShareText" xml:space="preserve"><value>{0}%</value></data>
+  <data name="ErrUnsupportedType" xml:space="preserve"><value>Unsupported file type. Only PNG, JPG, JPEG and WebP can be opened.</value></data>
+  <data name="ErrTooLarge" xml:space="preserve"><value>The file is too large (100 MB at most).</value></data>
+  <data name="ErrResolutionTooHigh" xml:space="preserve"><value>The image resolution is too high (about 100 megapixels at most).</value></data>
+  <data name="ErrNotAnImage" xml:space="preserve"><value>The file is not a valid PNG, JPEG or WebP image.</value></data>
+  <data name="ErrUnreadable" xml:space="preserve"><value>The file could not be read.</value></data>
+  <data name="ErrDecodeFailed" xml:space="preserve"><value>The image could not be decoded.</value></data>
+  <data name="ErrResizeFailed" xml:space="preserve"><value>The image could not be resized.</value></data>
+  <data name="ErrUnexpected" xml:space="preserve"><value>An unexpected error occurred while opening the image.</value></data>
+  <data name="ErrNoColors" xml:space="preserve"><value>No readable colors were found in this image (it may be fully transparent).</value></data>
+  <data name="RemoveAds" xml:space="preserve"><value>Remove ads</value></data>
+  <data name="RemoveAdsPrice" xml:space="preserve"><value>Remove ads ({0})</value></data>
+  <data name="PrivacyOptions" xml:space="preserve"><value>Ad privacy settings</value></data>
+  <data name="FormatLabel" xml:space="preserve"><value>Color value format</value></data>
+  <data name="ShareButton" xml:space="preserve"><value>Share</value></data>
+  <data name="ExportTitle" xml:space="preserve"><value>Share and export</value></data>
+  <data name="ExportCopySection" xml:space="preserve"><value>Copy to clipboard</value></data>
+  <data name="ExportHexList" xml:space="preserve"><value>HEX list</value></data>
+  <data name="ExportCss" xml:space="preserve"><value>CSS variables</value></data>
+  <data name="ExportJson" xml:space="preserve"><value>JSON</value></data>
+  <data name="ExportAndroid" xml:space="preserve"><value>Android colors.xml</value></data>
+  <data name="ExportFileSection" xml:space="preserve"><value>Save as file</value></data>
+  <data name="ExportGpl" xml:space="preserve"><value>GIMP / Resprite palette (.gpl)</value></data>
+  <data name="ExportGplHint" xml:space="preserve"><value>Resprite: Menu ▸ Palette ▸ Import RPL/GPL file</value></data>
+  <data name="ExportPng" xml:space="preserve"><value>Save palette image (PNG)</value></data>
+  <data name="ExportPng.Android" xml:space="preserve"><value>Share palette image (PNG)</value></data>
+  <data name="ExportShareTitle" xml:space="preserve"><value>Share palette</value></data>
+  <data name="ExportClose" xml:space="preserve"><value>Close</value></data>
+  <data name="ToastSaved" xml:space="preserve"><value>Saved</value></data>
+  <data name="ToastSaveFailed" xml:space="preserve"><value>Could not save the file</value></data>
+  <data name="PreviewLabel" xml:space="preserve"><value>Preview of the selected image</value></data>
+  <data name="ChooseImage" xml:space="preserve"><value>Choose an image</value></data>
+</root>

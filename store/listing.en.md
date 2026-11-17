@@ -5,7 +5,7 @@
 **Short description** (70/80):
 Pull a color palette from any photo. Copy HEX, RGB or CMYK in one tap.
 
-**Full description** (1158/4000):
+**Full description** (1360/4000):
 
 Palet Çıkarıcı (Image Palette Extractor) pulls the dominant colors out of any photo or image and shows each one as a card that is ready to copy.
 
@@ -17,13 +17,14 @@ HOW IT WORKS
 FEATURES
 • Anywhere from 2 to 48 colors.
 • Tone merging: collapse near-identical shades into one color, or keep them apart.
-• Switch between RGB and CMYK.
-• PNG, JPEG and WebP support.
+• Switch between RGB, CMYK, HSL and OKLCH values.
+• Export the palette: HEX list, CSS variables, JSON, Android colors.xml; a .gpl file for GIMP / Resprite; or share a palette image (PNG).
+• PNG, JPEG and WebP support, plus HEIC/HEIF, AVIF, GIF and BMP (where your device's system decoder supports them).
 • Follows your system theme: light and dark mode.
 • The same image always gives the same palette.
 • Your image never leaves your device: everything is processed on the phone. No account or location permission.
 
 NOTES
-• The app's interface is in Turkish.
+• The app's interface is in English and Turkish and follows your device language.
 • CMYK values use the standard profile-less formula; they are approximate and not suitable for color-accurate print work.
 • The app is free and shows a single ad at the end of the page. A one-time "Remove ads" purchase turns the ad off for good.

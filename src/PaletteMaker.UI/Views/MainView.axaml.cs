@@ -4,7 +4,9 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using PaletteMaker.Localization;
 using PaletteMaker.Monetization;
+using PaletteMaker.Sharing;
 using PaletteMaker.ViewModels;
 
 namespace PaletteMaker.Views;
@@ -100,22 +102,30 @@ public partial class MainView : UserControl
         return Math.Clamp(columns, MinSwatchColumns, MaxSwatchColumns);
     }
 
-    private static readonly FilePickerFileType ImageFileType = new("Görseller")
+    /// <summary>Seçici filtresi; platform çözücüsü varsa (Android) onun ek uzantı ve MIME türleri de eklenir.</summary>
+    private FilePickerFileType BuildImageFileType()
     {
-        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.PNG", "*.JPG", "*.JPEG", "*.WEBP"],
-        // Android sistem seçicisi desenlere değil MIME türüne bakar.
-        MimeTypes = ["image/png", "image/jpeg", "image/webp"],
-    };
+        var extra = Vm?.Transcoder;
+        return new FilePickerFileType(Loc.Get("PickerFilter"))
+        {
+            Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.PNG", "*.JPG", "*.JPEG", "*.WEBP",
+                ..(extra?.Extensions.Select(e => "*" + e) ?? [])],
+            // Android sistem seçicisi desenlere değil MIME türüne bakar.
+            MimeTypes = ["image/png", "image/jpeg", "image/webp", ..(extra?.MimeTypes ?? [])],
+        };
+    }
 
-    private async void OnPickTapped(object? sender, TappedEventArgs e)
+    private async void OnPickTapped(object? sender, TappedEventArgs e) => await PickImageAsync();
+
+    private async Task PickImageAsync()
     {
         var top = TopLevel.GetTopLevel(this);
         if (top == null) return;
         var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Görsel seç",
+            Title = Loc.Get("PickerTitle"),
             AllowMultiple = false,
-            FileTypeFilter = [ImageFileType],
+            FileTypeFilter = [BuildImageFileType()],
         });
         if (files.Count > 0) await LoadAsync(files[0]);
     }
@@ -156,18 +166,165 @@ public partial class MainView : UserControl
     private async void OnSwatchTapped(object? sender, TappedEventArgs e)
     {
         if ((sender as Control)?.DataContext is SwatchViewModel s)
-            await CopyAsync(s.Hex, $"{s.Hex} kopyalandı");
+            await CopyAsync(s.Hex, Loc.Format("ToastHexCopied", s.Hex));
+    }
+
+    /// <summary>Klavye / ekran okuyucu: odaklı karta Enter ya da Boşluk, dokunmayla aynı şekilde HEX kopyalar.</summary>
+    private async void OnSwatchKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Enter or Key.Space) || e.Source != sender) return;
+        e.Handled = true;
+        if ((sender as Control)?.DataContext is SwatchViewModel s)
+            await CopyAsync(s.Hex, Loc.Format("ToastHexCopied", s.Hex));
+    }
+
+    /// <summary>Klavye / ekran okuyucu: odaklı görsel alanına Enter ya da Boşluk dosya seçiciyi açar.</summary>
+    private async void OnDropZoneKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Enter or Key.Space)) return;
+        e.Handled = true;
+        await PickImageAsync();
     }
 
     private async void OnValueTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true; // karta (hex kopyalama) yayılmasın
         if ((sender as Control)?.DataContext is SwatchViewModel s)
-            await CopyAsync(s.ValueText, "Kopyalandı");
+            await CopyAsync(s.ValueText, Loc.Get("ToastCopied"));
+    }
+
+    // ---- Paylaş ve dışa aktar (alt sayfa) ---------------------------------------------------
+
+    private static readonly FilePickerFileType GimpPaletteType = new("GIMP / Resprite palette")
+    {
+        Patterns = ["*.gpl"],
+        // "text/plain" olursa Android dosya adına ".txt" ekler; genel ikili tür adı olduğu gibi bırakır.
+        MimeTypes = ["application/octet-stream"],
+    };
+
+    private static readonly FilePickerFileType PngType = new("PNG")
+    {
+        Patterns = ["*.png"],
+        MimeTypes = ["image/png"],
+    };
+
+    private void OnShare(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is { HasPalette: true } vm) vm.IsExportOpen = true;
+    }
+
+    private void OnScrimTapped(object? sender, RoutedEventArgs e) => CloseExportSheet();
+
+    private void CloseExportSheet()
+    {
+        if (Vm is { } vm) vm.IsExportOpen = false;
+    }
+
+    private async void OnExportCopy(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is not { } vm || (sender as Control)?.Tag is not string tag || !Enum.TryParse<ExportKind>(tag, out var kind)) return;
+        string label = kind switch
+        {
+            ExportKind.Css => Loc.Get("ExportCss"),
+            ExportKind.Json => Loc.Get("ExportJson"),
+            ExportKind.AndroidColorsXml => Loc.Get("ExportAndroid"),
+            _ => Loc.Get("ExportHexList"),
+        };
+        vm.IsExportOpen = false;
+        await CopyAsync(vm.ExportText(kind), Loc.Format("ToastHexCopied", label));
+    }
+
+    /// <summary>Resprite/GIMP paleti: gerçek bir .gpl dosyası kaydeder (Resprite içe aktarmayı dosya seçiciyle yapar).</summary>
+    private async void OnExportGpl(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+        vm.IsExportOpen = false;
+        var bytes = new System.Text.UTF8Encoding(false).GetBytes(vm.ExportText(ExportKind.GimpPalette));
+        await SaveFileAsync(bytes, vm.ExportFileName("gpl"), GimpPaletteType, "gpl");
+    }
+
+    private async void OnExportPng(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+        vm.IsExportOpen = false;
+        try
+        {
+            var png = await Task.Run(vm.RenderCardPng);
+            var name = vm.ExportFileName("png");
+            if (App.ShareService is { } share) await share.SharePngAsync(png, name, Loc.Get("ExportShareTitle"));
+            else await SaveFileAsync(png, name, PngType, "png");
+        }
+        catch (Exception)
+        {
+            vm.ShowToast(Loc.Get("ToastSaveFailed"));
+        }
+    }
+
+    /// <summary>"Farklı kaydet" iletişim kutusu (Android'de sistem SAF penceresi, izin gerekmez). İptal sessizce geçilir.</summary>
+    private async Task SaveFileAsync(byte[] data, string suggestedName, FilePickerFileType type, string extension)
+    {
+        var top = TopLevel.GetTopLevel(this);
+        if (top == null) return;
+        try
+        {
+            var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                SuggestedFileName = suggestedName,
+                DefaultExtension = extension,
+                FileTypeChoices = [type],
+                ShowOverwritePrompt = true,
+            });
+            if (file == null) return;
+            await using var stream = await file.OpenWriteAsync();
+            if (stream.CanSeek) stream.SetLength(0); // üzerine yazarken eski içerikten artık kalmasın
+            await stream.WriteAsync(data);
+            await stream.FlushAsync();
+            Vm?.ShowToast(Loc.Get("ToastSaved"));
+        }
+        catch (Exception)
+        {
+            Vm?.ShowToast(Loc.Get("ToastSaveFailed"));
+        }
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Key == Key.Escape && Vm is { IsExportOpen: true })
+        {
+            CloseExportSheet();
+            e.Handled = true;
+        }
+    }
+
+    private TopLevel? _backTopLevel;
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _backTopLevel = TopLevel.GetTopLevel(this);
+        if (_backTopLevel != null) _backTopLevel.BackRequested += OnBackRequested;
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (_backTopLevel != null) _backTopLevel.BackRequested -= OnBackRequested;
+        _backTopLevel = null;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    /// <summary>Android Geri tuşu: alt sayfa açıksa önce onu kapatır.</summary>
+    private void OnBackRequested(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is { IsExportOpen: true })
+        {
+            CloseExportSheet();
+            e.Handled = true;
+        }
     }
 
     private async void OnCopyAll(object? sender, RoutedEventArgs e)
     {
-        if (Vm is { } vm) await CopyAsync(vm.AllHexText(), "Tüm hex kodları kopyalandı");
+        if (Vm is { } vm) await CopyAsync(vm.AllHexText(), Loc.Get("ToastAllCopied"));
     }
 }

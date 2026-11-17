@@ -5,6 +5,7 @@ using Android.Content.PM;
 using Google.Android.Gms.Ads;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using PaletteMaker.Localization;
 using PaletteMaker.Monetization;
 using Xamarin.Google.UserMesssagingPlatform;
 
@@ -52,7 +53,7 @@ public sealed class PlayMonetization : ObservableObject, IMonetization, IDisposa
         get
         {
             var price = _details?.GetOneTimePurchaseOfferDetails()?.FormattedPrice;
-            return string.IsNullOrEmpty(price) ? "Reklamları kaldır" : $"Reklamları kaldır ({price})";
+            return string.IsNullOrEmpty(price) ? Loc.Get("RemoveAds") : Loc.Format("RemoveAdsPrice", price);
         }
     }
 
