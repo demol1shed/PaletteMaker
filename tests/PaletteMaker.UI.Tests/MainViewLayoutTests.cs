@@ -43,6 +43,27 @@ public class MainViewLayoutTests
         return data.ToArray();
     }
 
+    /// <summary>8×6 = 48 birbirinden uzak renk karosu (400×300 PNG).</summary>
+    private static byte[] FortyEightTilesPng()
+    {
+        using var bmp = new SKBitmap(new SKImageInfo(400, 300, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+        using (var canvas = new SKCanvas(bmp))
+        {
+            int i = 0;
+            foreach (var r in new byte[] { 30, 100, 170, 240 })
+                foreach (var g in new byte[] { 30, 100, 170, 240 })
+                    foreach (var b in new byte[] { 40, 140, 230 })
+                    {
+                        using var paint = new SKPaint { Color = new SKColor(r, g, b) };
+                        canvas.DrawRect((i % 8) * 50, (i / 8) * 50, 50, 50, paint);
+                        i++;
+                    }
+        }
+        using var image = SKImage.FromBitmap(bmp);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
+    }
+
     private static async Task<(Window Window, MainView View, MainViewModel Vm)> OpenAsync(
         int width, int height, bool dark, bool loadImage = true, bool cmyk = false)
     {
@@ -201,4 +222,38 @@ public class MainViewLayoutTests
     [InlineData(600, 3)] [InlineData(915, 5)] [InlineData(940, 5)] [InlineData(1400, 6)] [InlineData(4000, 6)]
     public void Column_count_follows_width(double width, int expected) =>
         Assert.Equal(expected, MainView.ColumnsFor(width));
+
+    [AvaloniaTheory]
+    [InlineData(360, 740)] [InlineData(940, 700)]
+    public async Task Forty_eight_colors_fit_without_horizontal_overflow(int width, int height)
+    {
+        var vm = new MainViewModel { MaxColors = 48, MergeStrength = 0 };
+        var view = new MainView { DataContext = vm };
+        var window = new Window { Width = width, Height = height, Content = view, RequestedThemeVariant = ThemeVariant.Light };
+        window.Show();
+        try
+        {
+            var png = FortyEightTilesPng();
+            await vm.LoadAsync("karolar.png", () => Task.FromResult<Stream>(new MemoryStream(png)));
+            Settle();
+
+            Assert.Null(vm.ErrorMessage);
+            Assert.Equal(48, vm.Swatches.Count);
+            var cards = view.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("swatch")).ToList();
+            Assert.Equal(48, cards.Count);
+
+            var scroll = view.FindControl<ScrollViewer>("PageScroll")!;
+            Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + 0.5,
+                $"yatay taşma: içerik {scroll.Extent.Width} > görünür alan {scroll.Viewport.Width}");
+            Assert.All(cards, c =>
+            {
+                var b = BoundsIn(c, view);
+                Assert.True(b.Left >= -0.5 && b.Right <= width + 0.5, $"kart dışarı taşıyor: {b.Left:0.#}–{b.Right:0.#}");
+            });
+            Capture(window, $"48-renk-{width}x{height}");
+            scroll.Offset = new Vector(0, scroll.Extent.Height - scroll.Viewport.Height);
+            Capture(window, $"48-renk-{width}x{height}-alt");
+        }
+        finally { window.Close(); }
+    }
 }

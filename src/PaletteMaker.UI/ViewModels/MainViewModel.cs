@@ -126,7 +126,7 @@ public partial class MainViewModel : ObservableObject
         {
             IsBusy = true;
             await Task.Delay(120, cts.Token); // kaydırıcı sürüklenirken art arda hesaplamayı önle
-            var palette = await Task.Run(() => PaletteExtractor.Extract(image.Rgba, options), cts.Token);
+            var palette = await Task.Run(() => PaletteExtractor.Extract(image.Rgba, options, cts.Token), cts.Token);
             if (cts.IsCancellationRequested) return;
 
             Swatches.Clear();

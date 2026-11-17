@@ -30,6 +30,11 @@
     <Style Selector="Border.valueChip">
       <Setter Property="MinHeight" Value="28" />
     </Style>
+    <Style Selector="TextBlock.hint">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Opacity" Value="0.6" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
 
     <Style Selector="Grid#Root.narrow StackPanel#Page">
       <Setter Property="Margin" Value="16" />
@@ -98,8 +103,9 @@
               <TextBlock Text="En fazla renk" />
               <TextBlock Grid.Column="1" Text="{Binding MaxColorsText}" FontWeight="SemiBold" />
             </Grid>
-            <Slider Minimum="2" Maximum="24" TickFrequency="1" IsSnapToTickEnabled="True"
+            <Slider Minimum="2" Maximum="48" TickFrequency="1" IsSnapToTickEnabled="True"
                     Value="{Binding MaxColors}" />
+            <TextBlock Classes="hint" Text="Palette en fazla kaç renk çıkacağını belirler. Görselde daha az renk varsa palet daha kısa olur." />
           </StackPanel>
           <StackPanel Spacing="2">
             <Grid ColumnDefinitions="*,Auto">
@@ -107,6 +113,7 @@
               <TextBlock Grid.Column="1" Text="az ↔ çok" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
             </Grid>
             <Slider Minimum="0" Maximum="1" Value="{Binding MergeStrength}" />
+            <TextBlock Classes="hint" Text="Birbirine yakın tonların tek renkte toplanma gücü. Az: benzer tonlar ayrı kalır. Çok: yakın tonlar birleşir, palet sadeleşir." />
           </StackPanel>
         </UniformGrid>
 

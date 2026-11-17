@@ -3,14 +3,14 @@ namespace PaletteMaker.Core;
 public sealed class PaletteOptions
 {
     public const int MinColorsLimit = 2;
-    public const int MaxColorsLimit = 24;
+    public const int MaxColorsLimit = 48;
     public const int DefaultMaxColors = 10;
-    public const double DefaultMergeStrength = 0.5;
+    public const double DefaultMergeStrength = 0.4;
 
     private int _maxColors = DefaultMaxColors;
     private double _mergeStrength = DefaultMergeStrength;
 
-    /// <summary>Paletteki en fazla renk sayısı (2–24).</summary>
+    /// <summary>Paletteki en fazla renk sayısı (2–48).</summary>
     public int MaxColors
     {
         get => _maxColors;

@@ -12,7 +12,7 @@
 - **Palette swatches** with hex code, RGB or CMYK value, and the share of the image each color covers.
 - **One-click copy:** click a swatch to copy its hex code, click the value line to copy the RGB/CMYK text, or copy every hex code at once.
 - **RGB ⇄ CMYK toggle** for the value shown under each swatch.
-- **Sane limits for busy images:** choose the maximum number of colors (2–24, default 10). Many near-identical shades of one color are merged into a single average tone, with an adjustable **merge strength**.
+- **Sane limits for busy images:** choose the maximum number of colors (2–48, default 10). Many near-identical shades of one color are merged into a single average tone, with an adjustable **merge strength**.
 - **Deterministic:** the same image always produces the same palette.
 - **Single-file builds** for Linux and Windows, no installer and no runtime to install. Android builds as a self-contained APK.
 
@@ -39,9 +39,9 @@ Each release also lists SHA-256 checksums (`SHA256SUMS.txt`). Verify your downlo
 1. The image is decoded and shrunk to at most 256 px on its long side. Pixels with alpha below 50% are ignored.
 2. Pixels are bucketed into a 5-bit-per-channel RGB histogram.
 3. Buckets are clustered with weighted **k-means++ in the OKLab color space**, which is perceptually uniform, so "close" means close to the eye.
-4. Clusters covering under 1% of the image are dropped (JPEG noise, edge blending).
+4. Clusters covering under 1% of the image are dropped (JPEG noise, edge blending). With a high *max colors* setting (above 24) this limit shrinks so that real colors are not discarded.
 5. Clusters closer together than a threshold set by *merge strength* are merged using a pixel-weighted average. Lightness differences count less than hue differences, so light and dark tones of one color collapse together while different colors stay apart.
-6. If more than *max colors* remain, the closest pairs keep merging until the limit is met.
+6. If more than *max colors* remain, the closest pairs keep merging until the limit is met. To see many colors in a busy image, lower the merge strength.
 
 CMYK values use the standard profile-less formula (`K = 1 − max(R,G,B)`), so they are approximate and not suitable for color-accurate print work.
 

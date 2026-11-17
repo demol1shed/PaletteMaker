@@ -3,13 +3,16 @@ namespace PaletteMaker.Core;
 /// <summary>Ham RGBA (alfası düz, premultiply edilmemiş) piksel tamponundan palet çıkarır.</summary>
 public static class PaletteExtractor
 {
-    private const int InitialClusters = 48;
+    /// <summary>En az bu kadar kümeyle başlanır; yüksek <c>MaxColors</c>'ta <see cref="ClusterCount"/> bunu büyütür.</summary>
+    private const int MinInitialClusters = 48;
     private const int MaxIterations = 30;
     private const int AlphaCutoff = 128;
     private const double NoiseShare = 0.01;
+    /// <summary>Yüksek renk sayısında meşru renkler %1'in altına düşer; eşik buna göre azalır.</summary>
+    private const double NoiseBudget = 0.25;
     private const double LightnessWeight = 0.5;
-    private const double MinThreshold = 0.02;
-    private const double MaxThreshold = 0.20;
+    private const double MinThreshold = 0.01;
+    private const double MaxThreshold = 0.14;
 
     private sealed class Cluster
     {
@@ -17,7 +20,14 @@ public static class PaletteExtractor
         public double Weight;
     }
 
-    public static IReadOnlyList<PaletteColor> Extract(ReadOnlySpan<byte> rgba, PaletteOptions? options = null)
+    /// <summary>Başlangıç küme sayısı: <c>MaxColors</c> kadar rengin ayrılabilmesi için en az onun iki katı (en az 48).</summary>
+    internal static int ClusterCount(int maxColors) => Math.Max(MinInitialClusters, 2 * maxColors);
+
+    /// <summary>Gürültü eşiği (pay): 24 renk ve altında %1, daha fazlasında <c>0,25 / MaxColors</c>.</summary>
+    internal static double NoiseThreshold(int maxColors) => Math.Min(NoiseShare, NoiseBudget / maxColors);
+
+    /// <param name="ct">İptal belirteci; k-means her yinelemede, birleştirme her turda kontrol eder.</param>
+    public static IReadOnlyList<PaletteColor> Extract(ReadOnlySpan<byte> rgba, PaletteOptions? options = null, CancellationToken ct = default)
     {
         options ??= new PaletteOptions();
 
@@ -40,16 +50,18 @@ public static class PaletteExtractor
             points.Add((ColorMath.RgbToOklab((double)e.R / e.Count, (double)e.G / e.Count, (double)e.B / e.Count), e.Count));
 
         // 4) Ağırlıklı k-means (k-means++ başlangıcı, sabit tohum).
-        var clusters = KMeans(points, Math.Min(InitialClusters, points.Count));
+        var clusters = KMeans(points, Math.Min(ClusterCount(options.MaxColors), points.Count), ct);
 
         // 5) Gürültü ayıklama.
-        var kept = clusters.Where(c => c.Weight / total >= NoiseShare).ToList();
+        double noise = NoiseThreshold(options.MaxColors);
+        var kept = clusters.Where(c => c.Weight / total >= noise).ToList();
         if (kept.Count == 0) kept.Add(clusters.OrderByDescending(c => c.Weight).First());
 
         // 6-7) Ton birleştirme ve sınır.
         double threshold = MinThreshold + (MaxThreshold - MinThreshold) * options.MergeStrength;
         while (kept.Count > 1)
         {
+            ct.ThrowIfCancellationRequested();
             (int i, int j, double d) = ClosestPair(kept);
             if (d >= threshold && kept.Count <= options.MaxColors) break;
             Merge(kept, i, j);
@@ -102,7 +114,7 @@ public static class PaletteExtractor
         cs.RemoveAt(j);
     }
 
-    private static List<Cluster> KMeans(List<(Lab Lab, double W)> pts, int k)
+    private static List<Cluster> KMeans(List<(Lab Lab, double W)> pts, int k, CancellationToken ct)
     {
         var rng = new Random(12345);
         var centers = new List<Lab>(k);
@@ -124,6 +136,7 @@ public static class PaletteExtractor
         Array.Fill(assign, -1);
         for (int iter = 0; iter < MaxIterations; iter++)
         {
+            ct.ThrowIfCancellationRequested();
             bool changed = false;
             for (int i = 0; i < pts.Count; i++)
             {
