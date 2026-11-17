@@ -17,6 +17,12 @@ updates:
       # SkiaSharp sürümü, Avalonia.Skia'nın bağımlı olduğu sürümle AYNI olmalı (CLAUDE.md); Avalonia güncellenince elle eşitlenir.
       - dependency-name: "SkiaSharp*"
       - dependency-name: "HarfBuzzSharp*"
+      # xunit.v3 4.x ve runner 4.x Microsoft.Testing.Platform ister; .NET 10 SDK'da "dotnet test" VSTest modu çalışmaz.
+      # Avalonia.Headless.XUnit ise xunit.v3 3.x çekirdeğine bağlı. İki test projesi 4.x'e birlikte, elle taşınacak.
+      - dependency-name: "xunit.v3*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "xunit.runner.visualstudio"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 5
 
   - package-ecosystem: github-actions
