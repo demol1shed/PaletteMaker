@@ -120,6 +120,42 @@ public class MainViewLayoutTests
 
     [AvaloniaTheory]
     [MemberData(nameof(Sizes))]
+    public async Task Load_error_shows_a_card_inside_the_image_area(string name, int width, int height)
+    {
+        foreach (bool dark in new[] { false, true })
+        {
+            var (window, view, vm) = await OpenAsync(width, height, dark, loadImage: false);
+            try
+            {
+                var junk = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+                await vm.LoadAsync("bozuk.png", () => Task.FromResult<Stream>(new MemoryStream(junk)));
+                Settle();
+
+                Assert.NotNull(vm.ErrorMessage);
+                var card = view.FindControl<Border>("ErrorCard")!;
+                var zone = view.FindControl<Border>("DropZone")!;
+                Assert.True(card.IsEffectivelyVisible, "hata kartı görünmeli");
+                var cb = BoundsIn(card, view);
+                var zb = BoundsIn(zone, view);
+                Assert.True(cb.Left >= zb.Left - 0.5 && cb.Right <= zb.Right + 0.5 && cb.Top >= zb.Top - 0.5 && cb.Bottom <= zb.Bottom + 0.5,
+                    $"hata kartı görsel alanının dışında ({name}, koyu={dark}): kart {cb}, alan {zb}");
+                Assert.Contains(card.GetVisualDescendants().OfType<TextBlock>(), t => t.Text == vm.ErrorMessage);
+                // "Görsel seç" ipucu kartın altında çakışmasın.
+                Assert.False(vm.ShowDropHint);
+                Capture(window, $"hata-karti-{name}-{(dark ? "koyu" : "acik")}");
+
+                // Yeni (geçerli) görsel seçilince kart kalkar.
+                var png = SamplePng();
+                await vm.LoadAsync("ornek-gorsel.png", () => Task.FromResult<Stream>(new MemoryStream(png)));
+                Settle();
+                Assert.False(card.IsEffectivelyVisible);
+            }
+            finally { window.Close(); }
+        }
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Sizes))]
     public async Task Layout_fits_and_adapts(string name, int width, int height)
     {
         foreach (bool dark in new[] { false, true })

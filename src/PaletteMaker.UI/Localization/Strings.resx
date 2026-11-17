@@ -24,6 +24,7 @@
   <data name="ToastAllCopied" xml:space="preserve"><value>All HEX codes copied</value></data>
   <data name="ShareText" xml:space="preserve"><value>{0}%</value></data>
   <data name="ErrUnsupportedType" xml:space="preserve"><value>Unsupported file type. Only PNG, JPG, JPEG and WebP can be opened.</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>Couldn't open the image</value></data>
   <data name="ErrTooLarge" xml:space="preserve"><value>The file is too large (100 MB at most).</value></data>
   <data name="ErrResolutionTooHigh" xml:space="preserve"><value>The image resolution is too high (about 100 megapixels at most).</value></data>
   <data name="ErrNotAnImage" xml:space="preserve"><value>The file is not a valid PNG, JPEG or WebP image.</value></data>

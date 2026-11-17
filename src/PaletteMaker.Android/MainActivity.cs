@@ -43,6 +43,8 @@ public class MainActivity : AvaloniaMainActivity
     {
         // Sistem paylaşım menüsü ("Palet görselini paylaş"); görünüm oluşmadan önce atanır.
         App.ShareService = new PaletteMaker.Droid.Sharing.AndroidShareService(this);
+        // Android 13+ panoya kopyalamada kendi onayını gösterir; bizim toast'ımız çift mesaj olurdu.
+        App.SystemShowsClipboardConfirmation = Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu;
         // HEIC/AVIF/GIF/BMP: Skia açamaz, Android'in sistem çözücüsü PNG'ye çevirir.
         if (Avalonia.Application.Current is App imagingApp)
             imagingApp.MainVm.Transcoder = new PaletteMaker.Droid.Imaging.AndroidImageTranscoder();

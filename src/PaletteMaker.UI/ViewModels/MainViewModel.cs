@@ -23,7 +23,10 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private IMonetization _monetization = NullMonetization.Instance;
 
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    [NotifyPropertyChangedFor(nameof(ShowDropHint))]
+    private string? _errorMessage;
     [ObservableProperty] private string? _toastMessage;
 
     [ObservableProperty]
@@ -59,6 +62,9 @@ public partial class MainViewModel : ObservableObject
 
     public string MaxColorsText => ((int)Math.Round(MaxColors)).ToString(System.Globalization.CultureInfo.InvariantCulture);
     public bool HasImage => _image != null;
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+    /// <summary>"Görsel seç / sürükle" ipucu: görsel yokken ve hata kartı açık değilken.</summary>
+    public bool ShowDropHint => !HasImage && !HasError;
     public bool HasPalette => Swatches.Count > 0;
 
     partial void OnMaxColorsChanged(double value) => _ = RecomputeAsync();
@@ -115,8 +121,10 @@ public partial class MainViewModel : ObservableObject
                 try
                 {
                     // Önizleme için tam çözünürlüğü belleğe açma; 800 px genişlikte çöz.
-                    using var ms = new MemoryStream(data, writable: false);
-                    preview = Bitmap.DecodeToWidth(ms, 800);
+                    // EXIF yönü (telefon fotoğrafları) varsa Skia ile döndürülmüş PNG; yoksa hızlı yol.
+                    var oriented = ImageLoader.RenderOrientedPreviewPng(data, 800);
+                    using var ms = new MemoryStream(oriented ?? data, writable: false);
+                    preview = oriented != null ? new Bitmap(ms) : Bitmap.DecodeToWidth(ms, 800);
                 }
                 catch { /* önizleme olmasa da palet çıkar */ }
                 return (decoded, preview);
@@ -132,6 +140,7 @@ public partial class MainViewModel : ObservableObject
             old?.Dispose(); // yenisi atandıktan sonra bırak; ekran bırakılmış bitmap'i çizmesin
             FileName = name;
             OnPropertyChanged(nameof(HasImage));
+            OnPropertyChanged(nameof(ShowDropHint));
             await RecomputeAsync();
             // Yeni bir görsel için palet gerçekten çıktı (kaydırıcıyla yeniden hesaplamalar ve hatalar sayılmaz).
             if (version == _loadVersion && Palette.Count > 0) PaletteLoaded?.Invoke(this, EventArgs.Empty);

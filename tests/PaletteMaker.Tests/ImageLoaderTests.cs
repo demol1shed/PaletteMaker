@@ -197,4 +197,45 @@ public class ImageLoaderTests
         }
         return ~crc;
     }
+
+    /// <summary>JPEG'in başına yalnızca yön etiketi (0x0112) olan bir EXIF APP1 bölümü ekler.</summary>
+    private static byte[] WithExifOrientation(byte[] jpeg, ushort orientation)
+    {
+        byte[] app1 =
+        {
+            0xFF, 0xE1, 0x00, 0x22, (byte)'E', (byte)'x', (byte)'i', (byte)'f', 0, 0,
+            (byte)'M', (byte)'M', 0x00, 0x2A, 0, 0, 0, 8,
+            0x00, 0x01, 0x01, 0x12, 0x00, 0x03, 0, 0, 0, 1, (byte)(orientation >> 8), (byte)orientation, 0, 0,
+            0, 0, 0, 0,
+        };
+        return jpeg.Take(2).Concat(app1).Concat(jpeg.Skip(2)).ToArray(); // SOI + APP1 + gerisi
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(6)]
+    [InlineData(8)]
+    public void Preview_applies_exif_orientation(int orientation)
+    {
+        // Sol yarı kırmızı, sağ yarı mavi, 64x32 JPEG.
+        var jpeg = WithExifOrientation(TestImages.Encode(TwoColor(64, 32), 64, 32, SKEncodedImageFormat.Jpeg, 100), (ushort)orientation);
+        Assert.Equal((SKEncodedOrigin)orientation, ImageLoader.GetOrigin(jpeg));
+
+        var png = ImageLoader.RenderOrientedPreviewPng(jpeg, 800);
+        if (orientation == 1) { Assert.Null(png); return; } // yön doğru: hızlı yol kullanılır
+
+        var img = ImageLoader.Decode(png!);
+        int w = img.Width, h = img.Height;
+        (int rx, int ry, int bx, int by) = orientation switch
+        {
+            3 => (w - 1, h - 1, 0, 0),          // 180°: kırmızı sağ-alt, mavi sol-üst
+            6 => (w / 2, 0, w / 2, h - 1),      // 90° saat yönü: kırmızı üstte, mavi altta
+            _ => (w / 2, h - 1, w / 2, 0),      // 8 = 270°: kırmızı altta, mavi üstte
+        };
+        if (orientation is 6 or 8) Assert.Equal((32, 64), (w, h)); else Assert.Equal((64, 32), (w, h));
+        byte[] px(int x, int y) => img.Rgba[((y * w + x) * 4)..((y * w + x) * 4 + 3)];
+        Assert.True(px(rx, ry)[0] > 200 && px(rx, ry)[2] < 60, "kırmızı beklenen yerde değil");
+        Assert.True(px(bx, by)[2] > 200 && px(bx, by)[0] < 60, "mavi beklenen yerde değil");
+    }
 }

@@ -160,7 +160,7 @@ public partial class MainView : UserControl
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
         if (clipboard == null) return;
         await clipboard.SetTextAsync(text);
-        Vm?.ShowToast(toast);
+        if (!App.SystemShowsClipboardConfirmation) Vm?.ShowToast(toast);
     }
 
     private async void OnSwatchTapped(object? sender, TappedEventArgs e)

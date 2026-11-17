@@ -24,6 +24,7 @@
   <data name="ToastAllCopied" xml:space="preserve"><value>Tüm hex kodları kopyalandı</value></data>
   <data name="ShareText" xml:space="preserve"><value>%{0}</value></data>
   <data name="ErrUnsupportedType" xml:space="preserve"><value>Desteklenmeyen dosya türü. Yalnızca PNG, JPG, JPEG ve WebP açılabilir.</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>Görsel açılamadı</value></data>
   <data name="ErrTooLarge" xml:space="preserve"><value>Dosya çok büyük (en fazla 100 MB).</value></data>
   <data name="ErrResolutionTooHigh" xml:space="preserve"><value>Görselin çözünürlüğü çok yüksek (en fazla ~100 megapiksel).</value></data>
   <data name="ErrNotAnImage" xml:space="preserve"><value>Dosya geçerli bir PNG, JPEG veya WebP görseli değil.</value></data>

@@ -25,6 +25,9 @@ public partial class App : Application
     /// <summary>Platformun paylaşım menüsü (Android). Boşsa PNG "Farklı kaydet" iletişim kutusuyla kaydedilir.</summary>
     public static IShareService? ShareService { get; set; }
 
+    /// <summary>Android 13+ panoya yazınca kendi "Kopyalandı" onayını gösterir; true iken uygulama kendi toast'ını göstermez (çift mesaj olmasın).</summary>
+    public static bool SystemShowsClipboardConfirmation { get; set; }
+
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()

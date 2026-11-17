@@ -132,11 +132,23 @@
           <Grid>
             <Image Source="{Binding Preview}" Stretch="Uniform" Margin="8" AutomationProperties.Name="{loc:T PreviewLabel}" />
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" Margin="16"
-                        IsVisible="{Binding !HasImage}">
+                        IsVisible="{Binding ShowDropHint}">
               <TextBlock FontSize="16" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
                          Text="{loc:T DropHint}" />
               <TextBlock Text="{loc:T Formats}" Opacity="0.6" HorizontalAlignment="Center" />
             </StackPanel>
+            <!-- Hata kartı: görsel alanının içinde, yeni görsel seçilene kadar kalır -->
+            <Border x:Name="ErrorCard" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16" Padding="16,12"
+                    CornerRadius="12" BorderThickness="2" BorderBrush="{DynamicResource ErrorText}"
+                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                    IsVisible="{Binding HasError}">
+              <StackPanel Spacing="4" MaxWidth="420">
+                <TextBlock Text="{loc:T ErrorTitle}" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource ErrorText}"
+                           TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorText}" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" TextAlignment="Center" AutomationProperties.LiveSetting="Assertive" />
+              </StackPanel>
+            </Border>
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" VerticalAlignment="Bottom" />
           </Grid>
         </Border>
@@ -172,10 +184,6 @@
           <Button x:Name="ShareButton" Grid.Column="2" Content="{loc:T ShareButton}" VerticalContentAlignment="Center"
                   IsEnabled="{Binding HasPalette}" Click="OnShare" />
         </Grid>
-
-        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorText}" TextWrapping="Wrap"
-                   AutomationProperties.LiveSetting="Assertive"
-                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
         <!-- Palet: eşit genişlikte sütunlar, kartlar boşluğu doldurur -->
         <ItemsControl x:Name="SwatchList" ItemsSource="{Binding Swatches}">
