@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using PaletteMaker.Monetization;
 using PaletteMaker.ViewModels;
 
 namespace PaletteMaker.Views;
@@ -30,7 +31,44 @@ public partial class MainView : UserControl
         InitializeComponent();
         DropZone.AddHandler(DragDrop.DragOverEvent, OnDragOver);
         DropZone.AddHandler(DragDrop.DropEvent, OnDrop);
+        DataContextChanged += (_, _) => AttachMonetization();
     }
+
+    private MainViewModel? _attachedVm;
+    private IMonetization? _attachedMonetization;
+
+    /// <summary>Reklam alanını görünüm modelinin (ve onun IMonetization'ının) durumuna bağlar.</summary>
+    private void AttachMonetization()
+    {
+        if (_attachedVm != null) _attachedVm.PropertyChanged -= OnVmPropertyChanged;
+        if (_attachedMonetization != null) _attachedMonetization.PropertyChanged -= OnMonetizationChanged;
+        _attachedVm = Vm;
+        _attachedMonetization = Vm?.Monetization;
+        if (_attachedVm != null) _attachedVm.PropertyChanged += OnVmPropertyChanged;
+        if (_attachedMonetization != null) _attachedMonetization.PropertyChanged += OnMonetizationChanged;
+        RefreshAd();
+    }
+
+    private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.Monetization)) AttachMonetization();
+    }
+
+    private void OnMonetizationChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => RefreshAd();
+
+    private void RefreshAd()
+    {
+        bool show = Vm?.Monetization.ShowAds == true && App.AdControlFactory != null;
+        if (show && AdSlot.Content == null) AdSlot.Content = App.AdControlFactory!();
+        else if (!show && AdSlot.Content != null) AdSlot.Content = null;
+    }
+
+    private async void OnRemoveAds(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is { } vm) await vm.Monetization.BuyRemoveAdsAsync();
+    }
+
+    private void OnPrivacyOptions(object? sender, RoutedEventArgs e) => Vm?.Monetization.ShowPrivacyOptions();
 
     /// <summary>Palet ızgarasının sütun sayısı; genişlikten hesaplanır.</summary>
     public int SwatchColumns

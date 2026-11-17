@@ -30,6 +30,14 @@
     <Style Selector="Border.valueChip">
       <Setter Property="MinHeight" Value="28" />
     </Style>
+    <Style Selector="Button.quiet">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="Grid#Root.narrow Button.quiet">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
     <Style Selector="TextBlock.hint">
       <Setter Property="FontSize" Value="12" />
       <Setter Property="Opacity" Value="0.6" />
@@ -161,6 +169,17 @@
 
         <TextBlock FontSize="12" Opacity="0.6" TextWrapping="Wrap"
                    Text="{OnPlatform Default='Karta tıkla: hex kopyalanır. Değer satırına tıkla: RGB/CMYK kopyalanır. CMYK, profilsiz yaklaşık değerdir.', Android='Karta dokun: hex kopyalanır. Değer satırına dokun: RGB/CMYK kopyalanır. CMYK yaklaşık değerdir.'}" />
+
+        <!-- Reklam: sayfanın en sonunda, içerikle kayar. Yalnızca Android Play sürümünde dolar; yüklenemezse yer kaplamaz. -->
+        <ContentControl x:Name="AdSlot" HorizontalAlignment="Stretch" />
+
+        <!-- Yalnızca reklam/satın alma varsa görünen sessiz bağlantılar -->
+        <WrapPanel HorizontalAlignment="Center">
+          <Button x:Name="RemoveAdsButton" Classes="quiet" Content="{Binding Monetization.RemoveAdsText}"
+                  IsVisible="{Binding Monetization.RemoveAdsAvailable}" Click="OnRemoveAds" />
+          <Button x:Name="PrivacyOptionsButton" Classes="quiet" Content="Reklam gizlilik ayarları"
+                  IsVisible="{Binding Monetization.PrivacyOptionsRequired}" Click="OnPrivacyOptions" />
+        </WrapPanel>
       </StackPanel>
     </ScrollViewer>
 

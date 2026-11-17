@@ -84,6 +84,8 @@ dotnet publish src/PaletteMaker.Android -c Release -f net10.0-android -o dist/an
 
 To avoid repeating the two `-p:` paths, put them in `src/PaletteMaker.Android/PaletteMaker.Android.csproj.user` (git-ignored) as `<AndroidSdkDirectory>` and `<JavaSdkDirectory>` properties.
 
+The default Android build has **no ads, no permissions and no network access**. A separate Google Play variant (`-p:Store=play`, maintainers only) adds an ad banner (Google AdMob, with Google's consent form) and a one-time "remove ads" purchase; it is the only build that needs the internet permission. Its sources live in `src/PaletteMaker.Android/Monetization/` and are not compiled into the default build.
+
 The result is `dist/android/io.github.demol1shed.palettemaker-Signed.apk`, signed with the local debug key: fine for installing on your own phone (`adb install -r <apk>` or copy it over and open it), not for distribution. Use the Release build for that; a Debug APK relies on fast deployment and will not start when copied to a device by hand.
 
 ## Project layout
@@ -92,9 +94,11 @@ The result is `dist/android/io.github.demol1shed.palettemaker-Signed.apk`, signe
 src/PaletteMaker.Core/        UI-independent library: image loading, OKLab/CMYK math, palette extraction
 src/PaletteMaker.UI/          Shared Avalonia 12 UI (MVVM): the one adaptive screen and its view models
 src/PaletteMaker/             Desktop launcher (Linux, Windows)
-src/PaletteMaker.Android/     Android launcher: activity, share/open-with handling, icon
+src/PaletteMaker.Android/     Android launcher: activity, share/open-with handling, icon, Play-only ads/billing (Store=play)
 tests/PaletteMaker.Tests/     xUnit tests for the core library
 tests/PaletteMaker.UI.Tests/  Headless layout tests; they also write phone/tablet/desktop screenshots
+docs/privacy.html             Privacy policy (Turkish + English) for the Play listing
+store/                        Play listing texts, data-safety answers and generated graphics
 ```
 
 Built with C#, .NET 10, [Avalonia UI](https://avaloniaui.net/) and [SkiaSharp](https://github.com/mono/SkiaSharp).
@@ -105,4 +109,8 @@ Images are decoded by Skia's native codecs. To limit abuse, files over 100 MB or
 
 ## License
 
-No license has been chosen yet. Until one is added, all rights are reserved by the author.
+Copyright (C) 2026 demol1shed
+
+PaletteMaker is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License v3.0** (see [`LICENSE`](LICENSE)). It is distributed in the hope that it will be useful, but **without any warranty**.
+
+You are welcome to build it yourself (see *Build from source*); the default build has no ads. The Google Play version is built from this same code with `-p:Store=play` and additionally bundles Google's proprietary ad, consent and billing libraries, which are not part of this repository and are not covered by the GPL. The app name and icon are not licensed for use by derived works.

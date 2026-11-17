@@ -14,14 +14,50 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>io.github.demol1shed.palettemaker</ApplicationId>
-    <ApplicationVersion>2</ApplicationVersion>
-    <ApplicationDisplayVersion>0.3.0</ApplicationDisplayVersion>
+    <ApplicationVersion>3</ApplicationVersion>
+    <ApplicationDisplayVersion>0.4.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <!-- Telefonlar arm64; x64 yalnızca emülatör için ve Release paketini büyütmesin diye Debug'da. -->
     <RuntimeIdentifiers Condition="'$(Configuration)' == 'Release'">android-arm64</RuntimeIdentifiers>
     <RuntimeIdentifiers Condition="'$(Configuration)' != 'Release'">android-arm64;android-x64</RuntimeIdentifiers>
   </PropertyGroup>
+  <!--
+    Google Play sürümü: dotnet publish ... -p:Store=play. Reklam (AdMob), rıza formu (UMP) ve "Reklamları kaldır"
+    satın alımı (Play Billing) yalnızca bu anahtarla pakete girer. Anahtarsız derleme reklamsız ve izinsizdir
+    (GitHub'dan kendi derleyenler için de varsayılan budur).
+  -->
+  <PropertyGroup Condition="'$(Store)' == 'play'">
+    <DefineConstants>$(DefineConstants);PLAY_STORE</DefineConstants>
+    <AndroidManifest>AndroidManifest.play.xml</AndroidManifest>
+    <!-- AAB her cihaza yalnızca kendi ABI'sini verir; x64 Chromebook/x86 cihazlar için. -->
+    <RuntimeIdentifiers Condition="'$(Configuration)' == 'Release'">android-arm64;android-x64</RuntimeIdentifiers>
+    <!-- Üstteki sabit AndroidPackageFormat=apk çoğul özelliği geçersiz kılar; Play Release'inde ikisi de aab. -->
+    <AndroidPackageFormat Condition="'$(Configuration)' == 'Release'">aab</AndroidPackageFormat>
+    <AndroidPackageFormats Condition="'$(Configuration)' == 'Release'">aab</AndroidPackageFormats>
+    <!-- Google'ın örnek (test) kimlikleri. Gerçekleri .csproj.user ya da -p: ile verilir; kimlikler gizli değildir. -->
+    <AdMobAppId Condition="'$(AdMobAppId)' == ''">ca-app-pub-3940256099942544~3347511713</AdMobAppId>
+    <AdMobBannerUnitId Condition="'$(AdMobBannerUnitId)' == ''">ca-app-pub-3940256099942544/2435281174</AdMobBannerUnitId>
+    <RemoveAdsProductId Condition="'$(RemoveAdsProductId)' == ''">remove_ads</RemoveAdsProductId>
+    <!-- Kimlikler manifest meta-verisi olarak gömülür; çalışma zamanında PackageManager okur (kırpmadan etkilenmez). -->
+    <AndroidManifestPlaceholders>admobAppId=$(AdMobAppId);admobBannerUnitId=$(AdMobBannerUnitId);removeAdsProductId=$(RemoveAdsProductId)</AndroidManifestPlaceholders>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(Store)' == 'play'">
+    <!-- AdMob (Play Hsdp) AppCompat 1.8 ister; Avalonia.Android 1.7.1'e sabit. Doğrudan referans çakışmayı çözer (NU1608 uyarısı beklenir). -->
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.8.0" />
+    <PackageReference Include="Xamarin.AndroidX.AppCompat.AppCompatResources" Version="1.8.0" />
+    <PackageReference Include="Xamarin.GooglePlayServices.Ads" Version="125.5.0" />
+    <PackageReference Include="Xamarin.Google.UserMessagingPlatform" Version="4.0.0.4" />
+    <PackageReference Include="Xamarin.Android.Google.BillingClient" Version="9.1.0.2" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Store)' != 'play'">
+    <Compile Remove="Monetization\**" />
+  </ItemGroup>
+  <!-- Test kimlikleriyle yayın paketi hata değil ama dikkat çekici bir uyarıdır: gelir getirmez, mağaza incelemesinde sorun çıkarabilir. -->
+  <Target Name="WarnTestAdIds" BeforeTargets="Build" Condition="'$(Store)' == 'play' and '$(Configuration)' == 'Release' and $(AdMobAppId.StartsWith('ca-app-pub-3940256099942544'))">
+    <Warning Text="Play Release derlemesi Google'ın ÖRNEK AdMob kimliklerini kullanıyor. Gerçek kimlikleri -p:AdMobAppId=... -p:AdMobBannerUnitId=... ile (ya da .csproj.user'da) verin." />
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\PaletteMaker.UI\PaletteMaker.UI.csproj" />
   </ItemGroup>

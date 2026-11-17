@@ -33,12 +33,43 @@ namespace PaletteMaker.Droid;
     DataMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"])]
 public class MainActivity : AvaloniaMainActivity
 {
+#if PLAY_STORE
+    private PaletteMaker.Droid.Monetization.PlayMonetization? _monetization;
+    private PaletteMaker.Droid.Monetization.AdBannerHost? _banner;
+#endif
+
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+#if PLAY_STORE
+        // Google Play sürümü: reklam ve satın alma. Görünüm (base.OnCreate) oluşmadan önce bağlanmalı,
+        // çünkü MainViewFactory orada çağrılır. GitHub / kendi derlemede bu blok derlenmez.
+        if (Avalonia.Application.Current is App playApp)
+        {
+            var monetization = _monetization = new PaletteMaker.Droid.Monetization.PlayMonetization(this);
+            playApp.MainVm.Monetization = monetization;
+            App.AdControlFactory = () => _banner = new PaletteMaker.Droid.Monetization.AdBannerHost(this, monetization.BannerUnitId);
+            monetization.Start();
+        }
+#endif
         base.OnCreate(savedInstanceState);
         // Sistem etkinliği eski durumdan geri yüklüyorsa aynı paylaşımı ikinci kez işleme.
         if (savedInstanceState == null) HandleIntent(Intent);
     }
+
+#if PLAY_STORE
+    protected override void OnPause() { _banner?.Pause(); base.OnPause(); }
+    protected override void OnResume() { base.OnResume(); _banner?.Resume(); }
+
+    protected override void OnDestroy()
+    {
+        if (Avalonia.Application.Current is App playApp && ReferenceEquals(playApp.MainVm.Monetization, _monetization))
+            playApp.MainVm.Monetization = PaletteMaker.Monetization.NullMonetization.Instance;
+        _monetization?.Dispose();
+        _monetization = null;
+        _banner = null;
+        base.OnDestroy();
+    }
+#endif
 
     protected override void OnNewIntent(Intent? intent)
     {

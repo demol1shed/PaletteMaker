@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using PaletteMaker.Monetization;
 using PaletteMaker.Core;
 
 namespace PaletteMaker.ViewModels;
@@ -16,6 +17,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty] private Bitmap? _preview;
     [ObservableProperty] private string? _fileName;
+    /// <summary>Reklam/satın alma. Masaüstünde ve GitHub derlemelerinde hep boş (<see cref="NullMonetization"/>).</summary>
+    [ObservableProperty] private IMonetization _monetization = NullMonetization.Instance;
+
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private string? _toastMessage;

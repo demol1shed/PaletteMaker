@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using PaletteMaker.ViewModels;
@@ -13,6 +14,12 @@ public partial class App : Application
     /// paylaşımla gelen görsel de (Android MainActivity) buraya yüklenir.
     /// </summary>
     public MainViewModel MainVm { get; } = new();
+
+    /// <summary>
+    /// Android Play sürümünün reklam kontrolünü üreten fabrika (<c>MainActivity</c> görünüm oluşmadan önce atar).
+    /// Boşsa sayfada reklam alanı hiç oluşturulmaz.
+    /// </summary>
+    public static Func<Control>? AdControlFactory { get; set; }
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 

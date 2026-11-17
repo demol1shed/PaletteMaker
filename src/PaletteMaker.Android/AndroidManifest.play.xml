@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Yalnızca Google Play sürümü (-p:Store=play). Reklam için internet izni gerekir; AD_ID ve BILLING izinleri
+  Google SDK'larından birleşir. Varsayılan (GitHub / kendi derleme) manifest AndroidManifest.xml'dir ve izinsizdir.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <application android:label="Palet Çıkarıcı"
+               android:icon="@mipmap/ic_launcher"
+               android:roundIcon="@mipmap/ic_launcher"
+               android:allowBackup="false"
+               android:supportsRtl="true">
+    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${admobAppId}" />
+    <meta-data android:name="io.github.demol1shed.palettemaker.BANNER_UNIT_ID" android:value="${admobBannerUnitId}" />
+    <meta-data android:name="io.github.demol1shed.palettemaker.REMOVE_ADS_PRODUCT_ID" android:value="${removeAdsProductId}" />
+  </application>
+</manifest>
