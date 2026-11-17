@@ -21,17 +21,16 @@ Supported formats: **PNG, JPG/JPEG, WebP.** Files are validated by their actual 
 
 ## Download
 
-Grab the latest build from the [Releases](../../releases) page:
+Grab the latest desktop build from the [Releases](../../releases) page:
 
 | Platform | File | Run |
 |---|---|---|
 | Windows 11 (x64) | `PaletteMaker-win-x64.zip` | Unzip, run `PaletteMaker.exe` |
 | Linux (x64) | `PaletteMaker-linux-x64.tar.gz` | `tar xzf PaletteMaker-linux-x64.tar.gz && ./PaletteMaker` |
-| Android 8.0+ (arm64) | `PaletteMaker-android-arm64.apk` | Open the file on your phone and allow installing from this source |
 
 Each release also lists SHA-256 checksums (`SHA256SUMS.txt`). Verify your download with `sha256sum -c SHA256SUMS.txt` (Linux) or `Get-FileHash` (PowerShell).
 
-**Android note:** the APK is signed with a generic debug key, not a release key, so Play Protect may warn about an unknown developer, and a later release signed with a different key cannot update it in place (uninstall first). The app requests no permissions.
+**Android:** the Android app is distributed through Google Play (release pending), so no APK is attached to the GitHub releases. You can still build the app yourself from this source (the default build has no ads and no permissions): see [Build from source → Android](#android) below.
 
 **Windows note:** the executable is not code-signed, so SmartScreen may warn you. Click *More info → Run anyway*. On first start the single-file app unpacks its native libraries to a temp folder, which can take a moment.
 
@@ -87,7 +86,7 @@ To avoid repeating the two `-p:` paths, put them in `src/PaletteMaker.Android/Pa
 
 The default Android build has **no ads, no permissions and no network access**. A separate Google Play variant (`-p:Store=play`, maintainers only) adds an ad banner (Google AdMob, with Google's consent form) and a one-time "remove ads" purchase; it is the only build that needs the internet permission. Its sources live in `src/PaletteMaker.Android/Monetization/` and are not compiled into the default build.
 
-The result is `dist/android/io.github.demol1shed.palettemaker-Signed.apk`, signed with the local debug key: fine for installing on your own phone (`adb install -r <apk>` or copy it over and open it), not for distribution. Use the Release build for that; a Debug APK relies on fast deployment and will not start when copied to a device by hand.
+The result is `dist/android/io.github.demol1shed.palettemaker-Signed.apk`, signed with the local debug key: fine for installing on your own phone (`adb install -r <apk>` or copy it over and open it), not for distribution. Because of that generic debug key, Play Protect may warn about an unknown developer, and a later build signed with a different key cannot update it in place (uninstall first). Always install the Release build; a Debug APK relies on fast deployment and will not start when copied to a device by hand.
 
 ## Project layout
 
