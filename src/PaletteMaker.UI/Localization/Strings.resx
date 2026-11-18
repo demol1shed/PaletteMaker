@@ -47,6 +47,9 @@
   <data name="ExportFileSection" xml:space="preserve"><value>Save as file</value></data>
   <data name="ExportGpl" xml:space="preserve"><value>GIMP / Resprite palette (.gpl)</value></data>
   <data name="ExportGplHint" xml:space="preserve"><value>Resprite: Menu ▸ Palette ▸ Import RPL/GPL file</value></data>
+  <data name="ExportAse" xml:space="preserve"><value>Adobe Swatch Exchange (.ase)</value></data>
+  <data name="ExportAco" xml:space="preserve"><value>Photoshop swatches (.aco)</value></data>
+  <data name="ExportAdobeHint" xml:space="preserve"><value>Illustrator / InDesign / Photoshop: Swatches panel ▸ menu ▸ import</value></data>
   <data name="ExportPng" xml:space="preserve"><value>Save palette image (PNG)</value></data>
   <data name="ExportPng.Android" xml:space="preserve"><value>Share palette image (PNG)</value></data>
   <data name="ExportShareTitle" xml:space="preserve"><value>Share palette</value></data>

@@ -5,7 +5,7 @@
 **Kısa açıklama** (78/80):
 Görselden renk paleti çıkar. HEX, RGB ve CMYK kodlarını tek dokunuşla kopyala.
 
-**Tam açıklama** (1349/4000):
+**Tam açıklama** (1414/4000):
 
 Palet Çıkarıcı, bir fotoğraftan ya da görselden dominant renkleri çıkarıp her biri için kopyalamaya hazır bir kart gösterir.
 
@@ -18,7 +18,7 @@ NASIL ÇALIŞIR
 • 2 ile 48 arasında istediğin kadar renk.
 • Ton birleştirme: birbirine çok yakın tonları tek renkte topla ya da ayrı bırak.
 • RGB, CMYK, HSL ve OKLCH değerleri arasında geçiş.
-• Paleti dışa aktar: HEX listesi, CSS değişkenleri, JSON, Android colors.xml; GIMP / Resprite için .gpl dosyası; ya da palet görselini (PNG) paylaş.
+• Paleti dışa aktar: HEX listesi, CSS değişkenleri, JSON, Android colors.xml; GIMP / Resprite için .gpl dosyası; Illustrator ve Photoshop için Adobe renk örnekleri (.ase, .aco); ya da palet görselini (PNG) paylaş.
 • PNG, JPEG ve WebP desteği; ayrıca HEIC/HEIF, AVIF, GIF ve BMP (cihazın sistem çözücüsü destekliyorsa).
 • Sistem temasına uyar: açık ve koyu mod.
 • Aynı görsel her zaman aynı paleti verir.

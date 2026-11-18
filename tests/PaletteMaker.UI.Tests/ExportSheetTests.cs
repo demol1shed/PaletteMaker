@@ -59,7 +59,8 @@ public class ExportSheetTests
     private static void Click(Button b) { b.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Settle(); }
 
     private static IEnumerable<Button> SheetButtons(MainView v) =>
-        v.FindControl<Border>("ExportSheet")!.GetVisualDescendants().OfType<Button>();
+        // Kaydırma çubuğunun ok/iz düğmeleri (RepeatButton) sayfa öğesi değildir; sayfa kaydırılırken ortaya çıkarlar.
+        v.FindControl<Border>("ExportSheet")!.GetVisualDescendants().OfType<Button>().Where(b => b is not RepeatButton);
 
     private static Button SheetButton(MainView v, string tag) => SheetButtons(v).First(b => (b.Tag as string) == tag);
 
@@ -180,6 +181,10 @@ public class ExportSheetTests
         {
             Assert.Equal("gün batımı_ v2_", vm.BaseFileName);
             Assert.Equal("gün batımı_ v2_-palette.gpl", vm.ExportFileName("gpl"));
+            Assert.Equal("gün batımı_ v2_-palette.ase", vm.ExportFileName("ase"));
+            Assert.Equal("gün batımı_ v2_-palette.aco", vm.ExportFileName("aco"));
+            Assert.Equal("ASEF", System.Text.Encoding.ASCII.GetString(vm.ExportAse(), 0, 4));
+            Assert.Equal(vm.Palette.Count, vm.ExportAco()[3]); // v1 bölümünün renk sayısı (ushort'un düşük baytı)
             Assert.Contains("Name: gün batımı_ v2_\n", vm.ExportText(ExportKind.GimpPalette));
             vm.FileName = "klasör/alt/resim.jpg"; // yol benzeri adlarda yalnızca son parça kullanılır
             Assert.Equal("resim", vm.BaseFileName);

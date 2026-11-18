@@ -5,7 +5,7 @@
 **Short description** (70/80):
 Pull a color palette from any photo. Copy HEX, RGB or CMYK in one tap.
 
-**Full description** (1360/4000):
+**Full description** (1419/4000):
 
 Palet Çıkarıcı (Image Palette Extractor) pulls the dominant colors out of any photo or image and shows each one as a card that is ready to copy.
 
@@ -18,7 +18,7 @@ FEATURES
 • Anywhere from 2 to 48 colors.
 • Tone merging: collapse near-identical shades into one color, or keep them apart.
 • Switch between RGB, CMYK, HSL and OKLCH values.
-• Export the palette: HEX list, CSS variables, JSON, Android colors.xml; a .gpl file for GIMP / Resprite; or share a palette image (PNG).
+• Export the palette: HEX list, CSS variables, JSON, Android colors.xml; a .gpl file for GIMP / Resprite; Adobe swatches (.ase, .aco) for Illustrator and Photoshop; or share a palette image (PNG).
 • PNG, JPEG and WebP support, plus HEIC/HEIF, AVIF, GIF and BMP (where your device's system decoder supports them).
 • Follows your system theme: light and dark mode.
 • The same image always gives the same palette.

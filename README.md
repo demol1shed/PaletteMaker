@@ -12,7 +12,7 @@
 - **Palette swatches** with hex code, RGB or CMYK value, and the share of the image each color covers.
 - **One-click copy:** click a swatch to copy its hex code, click the value line to copy the RGB/CMYK text, or copy every hex code at once.
 - **RGB, CMYK, HSL or OKLCH** for the value shown under each swatch (one drop-down).
-- **Share and export:** copy the palette as a HEX list, CSS variables, JSON or Android `colors.xml`; save it as a **GIMP / Resprite `.gpl`** palette file (in Resprite: *Menu ▸ Palette ▸ Import RPL/GPL file*); or share/save a PNG image of the palette.
+- **Share and export:** copy the palette as a HEX list, CSS variables, JSON or Android `colors.xml`; save it as a **GIMP / Resprite `.gpl`** palette file (in Resprite: *Menu ▸ Palette ▸ Import RPL/GPL file*), or as **Adobe swatches** (`.ase` for Illustrator / InDesign / Photoshop, `.aco` for Photoshop; in the app: *Swatches panel ▸ menu ▸ import*); or share/save a PNG image of the palette.
 - **Sane limits for busy images:** choose the maximum number of colors (2–48, default 10). Many near-identical shades of one color are merged into a single average tone, with an adjustable **merge strength**.
 - **Deterministic:** the same image always produces the same palette.
 - **Single-file builds** for Linux and Windows, no installer and no runtime to install. Android builds as a self-contained APK.

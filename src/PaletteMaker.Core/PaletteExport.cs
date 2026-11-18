@@ -76,4 +76,76 @@ public static class PaletteExport
             sb.Append(CultureInfo.InvariantCulture, $"{c.R,3} {c.G,3} {c.B,3}\t{c.Hex}\n");
         return sb.ToString();
     }
+
+    /// <summary>
+    /// Adobe Swatch Exchange (<c>.ase</c>): Illustrator, InDesign ve Photoshop'un (2020+) renk örnekleri paneline aktarılan
+    /// ikili biçim. <c>ASEF</c> başlığı, ardından renk başına bir blok (ad = HEX kod, RGB modeli, 0–1 aralığında 3 float32).
+    /// Düz liste yazılır (grup bloğu yok). Sayılar big-endian, dizeler UTF-16BE ve <c>\0</c> ile biter.
+    /// </summary>
+    public static byte[] AdobeSwatchExchange(IReadOnlyList<PaletteColor> palette)
+    {
+        using var ms = new MemoryStream();
+        Span<byte> buf = stackalloc byte[4];
+        ms.Write("ASEF"u8);
+        WriteU16(ms, 1); // sürüm 1.0
+        WriteU16(ms, 0);
+        WriteU32(ms, (uint)palette.Count);
+        foreach (var c in palette)
+        {
+            string name = c.Hex;
+            int nameChars = name.Length + 1; // sonlandırıcı \0 dahil
+            WriteU16(ms, 0x0001); // renk bloğu
+            WriteU32(ms, (uint)(2 + nameChars * 2 + 4 + 12 + 2));
+            WriteName(ms, name);
+            ms.Write("RGB "u8);
+            foreach (byte channel in (ReadOnlySpan<byte>)[c.R, c.G, c.B])
+            {
+                System.Buffers.Binary.BinaryPrimitives.WriteSingleBigEndian(buf, channel / 255f);
+                ms.Write(buf);
+            }
+            WriteU16(ms, 2); // 0 = global, 1 = spot, 2 = normal
+        }
+        return ms.ToArray();
+    }
+
+    /// <summary>
+    /// Photoshop renk örnekleri (<c>.aco</c>): önce adsız sürüm 1 bölümü (eski okuyucular), ardından adlı sürüm 2 bölümü
+    /// (Photoshop adları buradan okur). RGB renk uzayı (0), kanallar 16 bit (<c>değer × 257</c>, yani 255 → 65535).
+    /// Sayılar big-endian, ad UTF-16BE ve <c>\0</c> ile biter. Renk adı HEX koddur.
+    /// </summary>
+    public static byte[] PhotoshopSwatches(IReadOnlyList<PaletteColor> palette)
+    {
+        using var ms = new MemoryStream();
+        foreach (int version in (ReadOnlySpan<int>)[1, 2])
+        {
+            WriteU16(ms, (ushort)version);
+            WriteU16(ms, (ushort)palette.Count);
+            foreach (var c in palette)
+            {
+                WriteU16(ms, 0); // RGB
+                WriteU16(ms, (ushort)(c.R * 257));
+                WriteU16(ms, (ushort)(c.G * 257));
+                WriteU16(ms, (ushort)(c.B * 257));
+                WriteU16(ms, 0);
+                if (version == 2)
+                {
+                    WriteU16(ms, 0);
+                    WriteName(ms, c.Hex);
+                }
+            }
+        }
+        return ms.ToArray();
+    }
+
+    private static void WriteU16(Stream s, ushort v) => s.Write([(byte)(v >> 8), (byte)v]);
+
+    private static void WriteU32(Stream s, uint v) => s.Write([(byte)(v >> 24), (byte)(v >> 16), (byte)(v >> 8), (byte)v]);
+
+    /// <summary>Uzunluk öneki (karakter, sonlandırıcı dahil) + UTF-16BE ad + <c>\0</c>.</summary>
+    private static void WriteName(Stream s, string name)
+    {
+        WriteU16(s, (ushort)(name.Length + 1));
+        s.Write(Encoding.BigEndianUnicode.GetBytes(name));
+        WriteU16(s, 0);
+    }
 }

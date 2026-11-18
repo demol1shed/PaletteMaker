@@ -47,6 +47,9 @@
   <data name="ExportFileSection" xml:space="preserve"><value>Dosya olarak kaydet</value></data>
   <data name="ExportGpl" xml:space="preserve"><value>GIMP / Resprite paleti (.gpl)</value></data>
   <data name="ExportGplHint" xml:space="preserve"><value>Resprite: Menü ▸ Palet ▸ RPL/GPL dosyası içe aktar</value></data>
+  <data name="ExportAse" xml:space="preserve"><value>Adobe Swatch Exchange (.ase)</value></data>
+  <data name="ExportAco" xml:space="preserve"><value>Photoshop renk örnekleri (.aco)</value></data>
+  <data name="ExportAdobeHint" xml:space="preserve"><value>Illustrator / InDesign / Photoshop: Swatches paneli ▸ menü ▸ içe aktar</value></data>
   <data name="ExportPng" xml:space="preserve"><value>Palet görselini kaydet (PNG)</value></data>
   <data name="ExportPng.Android" xml:space="preserve"><value>Palet görselini paylaş (PNG)</value></data>
   <data name="ExportShareTitle" xml:space="preserve"><value>Paleti paylaş</value></data>

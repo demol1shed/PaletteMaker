@@ -150,6 +150,154 @@ public class PaletteExportTests
         }
     }
 
+    // ---- Adobe: .ase ve .aco ------------------------------------------------------------------
+
+    private static ushort U16(byte[] d, ref int p) { var v = (ushort)(d[p] << 8 | d[p + 1]); p += 2; return v; }
+    private static uint U32(byte[] d, ref int p) { var v = (uint)d[p] << 24 | (uint)d[p + 1] << 16 | (uint)d[p + 2] << 8 | d[p + 3]; p += 4; return v; }
+    private static string Name(byte[] d, ref int p)
+    {
+        int chars = U16(d, ref p); // sonlandırıcı \0 dahil
+        var s = System.Text.Encoding.BigEndianUnicode.GetString(d, p, (chars - 1) * 2);
+        p += chars * 2;
+        Assert.Equal(0, d[p - 2] | d[p - 1]); // \0 ile bitiyor
+        return s;
+    }
+
+    /// <summary>Küçük bir .ase okuyucu: ASEF başlığı, blok uzunlukları ve RGB float kanallarını spesifikasyona göre çözer.</summary>
+    private static List<(string Name, float R, float G, float B)> ParseAse(byte[] d)
+    {
+        Assert.Equal("ASEF", System.Text.Encoding.ASCII.GetString(d, 0, 4));
+        int p = 4;
+        Assert.Equal(1, U16(d, ref p)); Assert.Equal(0, U16(d, ref p));
+        uint blocks = U32(d, ref p);
+        var colors = new List<(string, float, float, float)>();
+        for (uint i = 0; i < blocks; i++)
+        {
+            Assert.Equal(0x0001, U16(d, ref p));
+            int length = (int)U32(d, ref p), end = p + length;
+            string name = Name(d, ref p);
+            Assert.Equal("RGB ", System.Text.Encoding.ASCII.GetString(d, p, 4)); p += 4;
+            float[] ch = new float[3];
+            for (int k = 0; k < 3; k++)
+            {
+                ch[k] = System.Buffers.Binary.BinaryPrimitives.ReadSingleBigEndian(d.AsSpan(p, 4)); p += 4;
+            }
+            Assert.Equal(2, U16(d, ref p));
+            Assert.Equal(end, p); // blok uzunluğu tam tutuyor
+            colors.Add((name, ch[0], ch[1], ch[2]));
+        }
+        Assert.Equal(d.Length, p);
+        return colors;
+    }
+
+    /// <summary>Küçük bir .aco okuyucu: v1 ve v2 bölümlerini okur; v2 adlarını döndürür.</summary>
+    private static (List<(int R, int G, int B)> V1, List<(int R, int G, int B, string Name)> V2) ParseAco(byte[] d)
+    {
+        int p = 0;
+        var v1 = new List<(int, int, int)>();
+        var v2 = new List<(int, int, int, string)>();
+        Assert.Equal(1, U16(d, ref p));
+        int n1 = U16(d, ref p);
+        for (int i = 0; i < n1; i++)
+        {
+            Assert.Equal(0, U16(d, ref p)); // RGB
+            v1.Add((U16(d, ref p), U16(d, ref p), U16(d, ref p))); U16(d, ref p);
+        }
+        Assert.Equal(2, U16(d, ref p));
+        int n2 = U16(d, ref p);
+        for (int i = 0; i < n2; i++)
+        {
+            Assert.Equal(0, U16(d, ref p));
+            int r = U16(d, ref p), g = U16(d, ref p), b = U16(d, ref p); U16(d, ref p);
+            Assert.Equal(0, U16(d, ref p));
+            v2.Add((r, g, b, Name(d, ref p)));
+        }
+        Assert.Equal(d.Length, p);
+        return (v1, v2);
+    }
+
+    [Fact]
+    public void AdobeSwatchExchange_header_and_first_block_golden()
+    {
+        var d = PaletteExport.AdobeSwatchExchange(Two);
+        // "ASEF", sürüm 1.0, 2 blok; ilk blok: tür 0x0001, uzunluk 2+16+4+12+2=36, ad uzunluğu 8, "#E63946"
+        Assert.Equal(Convert.FromHexString("41534546" + "00010000" + "00000002" + "0001" + "00000024" + "0008"), d[..20]);
+        Assert.Equal(Convert.FromHexString("0023004500360033003900340036" + "0000" + "52474220"), d[20..40]);
+    }
+
+    [Fact]
+    public void AdobeSwatchExchange_round_trips_through_a_parser()
+    {
+        var palette = Enumerable.Range(0, 48).Select(i => new PaletteColor((byte)(i * 5), (byte)(255 - i * 5), (byte)(i * 3), 1.0 / 48)).ToArray();
+        var colors = ParseAse(PaletteExport.AdobeSwatchExchange(palette));
+        Assert.Equal(48, colors.Count);
+        for (int i = 0; i < palette.Length; i++)
+        {
+            Assert.Equal(palette[i].Hex, colors[i].Name);
+            Assert.Equal(palette[i].R, (int)Math.Round(colors[i].R * 255));
+            Assert.Equal(palette[i].G, (int)Math.Round(colors[i].G * 255));
+            Assert.Equal(palette[i].B, (int)Math.Round(colors[i].B * 255));
+        }
+    }
+
+    [Fact]
+    public void AdobeSwatchExchange_extremes_are_exact()
+    {
+        var colors = ParseAse(PaletteExport.AdobeSwatchExchange([new(0, 0, 0, 0.5), new(255, 255, 255, 0.5)]));
+        Assert.Equal((0f, 0f, 0f), (colors[0].R, colors[0].G, colors[0].B));
+        Assert.Equal((1f, 1f, 1f), (colors[1].R, colors[1].G, colors[1].B));
+    }
+
+    [Fact]
+    public void PhotoshopSwatches_golden()
+    {
+        var d = PaletteExport.PhotoshopSwatches([new(255, 0, 128, 1)]);
+        string expected =
+            "0001" + "0001" + "0000" + "FFFF" + "0000" + "8080" + "0000" +                    // v1
+            "0002" + "0001" + "0000" + "FFFF" + "0000" + "8080" + "0000" + "0000" +           // v2 renk
+            "0008" + "0023" + "0046" + "0046" + "0030" + "0030" + "0038" + "0030" + "0000";   // "#FF0080\0"
+        Assert.Equal(Convert.FromHexString(expected), d);
+    }
+
+    [Fact]
+    public void PhotoshopSwatches_round_trips_all_byte_values()
+    {
+        var palette = Enumerable.Range(0, 256).Select(i => new PaletteColor((byte)i, (byte)(255 - i), (byte)(i ^ 0x55), 1.0 / 256)).ToArray();
+        var (v1, v2) = ParseAco(PaletteExport.PhotoshopSwatches(palette));
+        Assert.Equal(256, v1.Count);
+        Assert.Equal(256, v2.Count);
+        for (int i = 0; i < palette.Length; i++)
+        {
+            Assert.Equal((palette[i].R * 257, palette[i].G * 257, palette[i].B * 257), v1[i]);
+            Assert.Equal((v1[i].R, v1[i].G, v1[i].B, palette[i].Hex), v2[i]);
+            Assert.Equal(palette[i].R, v1[i].R / 257); // 16 bit → 8 bit tam geri dönüş
+        }
+    }
+
+    [Fact]
+    public void Adobe_exports_of_an_empty_palette_are_valid()
+    {
+        Assert.Empty(ParseAse(PaletteExport.AdobeSwatchExchange([])));
+        var (v1, v2) = ParseAco(PaletteExport.PhotoshopSwatches([]));
+        Assert.Empty(v1);
+        Assert.Empty(v2);
+    }
+
+    [Fact]
+    public void Adobe_exports_are_culture_independent()
+    {
+        var before = (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
+        try
+        {
+            var ase = PaletteExport.AdobeSwatchExchange(Two);
+            var aco = PaletteExport.PhotoshopSwatches(Two);
+            CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo("tr-TR");
+            Assert.Equal(ase, PaletteExport.AdobeSwatchExchange(Two));
+            Assert.Equal(aco, PaletteExport.PhotoshopSwatches(Two));
+        }
+        finally { (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture) = before; }
+    }
+
     [Fact]
     public void Json_has_the_expected_structure()
     {

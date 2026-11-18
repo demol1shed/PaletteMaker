@@ -238,4 +238,10 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Paletti paylaşılabilir PNG kart olarak çizer (arka planda çağrılması önerilir).</summary>
     public byte[] RenderCardPng() => PaletteCardRenderer.RenderPng(Palette);
+
+    /// <summary>Adobe Swatch Exchange (.ase): Illustrator / InDesign / Photoshop.</summary>
+    public byte[] ExportAse() => PaletteExport.AdobeSwatchExchange(Palette);
+
+    /// <summary>Photoshop renk örnekleri (.aco).</summary>
+    public byte[] ExportAco() => PaletteExport.PhotoshopSwatches(Palette);
 }

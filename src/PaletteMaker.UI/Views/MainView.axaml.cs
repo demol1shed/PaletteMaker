@@ -202,6 +202,18 @@ public partial class MainView : UserControl
         MimeTypes = ["application/octet-stream"],
     };
 
+    private static readonly FilePickerFileType AseType = new("Adobe Swatch Exchange")
+    {
+        Patterns = ["*.ase"],
+        MimeTypes = ["application/octet-stream"],
+    };
+
+    private static readonly FilePickerFileType AcoType = new("Photoshop swatches")
+    {
+        Patterns = ["*.aco"],
+        MimeTypes = ["application/octet-stream"],
+    };
+
     private static readonly FilePickerFileType PngType = new("PNG")
     {
         Patterns = ["*.png"],
@@ -241,6 +253,22 @@ public partial class MainView : UserControl
         vm.IsExportOpen = false;
         var bytes = new System.Text.UTF8Encoding(false).GetBytes(vm.ExportText(ExportKind.GimpPalette));
         await SaveFileAsync(bytes, vm.ExportFileName("gpl"), GimpPaletteType, "gpl");
+    }
+
+    /// <summary>Adobe Swatch Exchange (.ase): Illustrator, InDesign, Photoshop.</summary>
+    private async void OnExportAse(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+        vm.IsExportOpen = false;
+        await SaveFileAsync(vm.ExportAse(), vm.ExportFileName("ase"), AseType, "ase");
+    }
+
+    /// <summary>Photoshop renk örnekleri (.aco).</summary>
+    private async void OnExportAco(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is not { } vm) return;
+        vm.IsExportOpen = false;
+        await SaveFileAsync(vm.ExportAco(), vm.ExportFileName("aco"), AcoType, "aco");
     }
 
     private async void OnExportPng(object? sender, RoutedEventArgs e)
