@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:PaletteMaker.Localization"
+             x:Class="PaletteMaker.Views.SettingsView">
+  <!-- Yer tutucu: ayarlar sonra eklenecek. -->
+  <Grid Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+    <StackPanel Margin="20" Spacing="8" MaxWidth="1100" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+      <TextBlock Text="{loc:T SettingsTitle}" FontSize="24" FontWeight="SemiBold" />
+      <TextBlock Classes="hint" Text="{loc:T SettingsComingSoon}" />
+    </StackPanel>
+  </Grid>
+</UserControl>

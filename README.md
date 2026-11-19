@@ -8,7 +8,8 @@
 
 - **Drag & drop** an image onto the window, or click to pick a file. You can also pass a path on the command line.
 - **On Android:** tap to pick an image, or use *Share* / *Open with* from your gallery to send one straight to the app. No permissions are requested.
-- **One adaptive layout:** the same screen rearranges itself for phones, tablets and desktop windows.
+- **One adaptive layout:** the same screens rearrange themselves for phones, tablets and desktop windows. A **bottom navigation bar** switches between *Settings* (placeholder for now), *Image* (palette from a picture) and *Harmony* (`Ctrl+1/2/3` on the desktop).
+- **Color harmony:** pick a base color on an artist's **RYB color wheel** (or type a HEX code, or send a swatch over from the *Image* screen with its palette button), choose a rule (analogous, monochromatic, triad, complementary, split complementary, double split complementary, square, compound, shades) and get a 5-color palette. Drag the dots on the wheel to rotate the harmony, use the brightness slider, copy colors, and export the palette like any other.
 - **Palette swatches** with hex code, RGB or CMYK value, and the share of the image each color covers.
 - **One-click copy:** click a swatch to copy its hex code, click the value line to copy the RGB/CMYK text, or copy every hex code at once.
 - **RGB, CMYK, HSL or OKLCH** for the value shown under each swatch (one drop-down).
@@ -92,7 +93,7 @@ The result is `dist/android/io.github.demol1shed.palettemaker-Signed.apk`, signe
 
 ```
 src/PaletteMaker.Core/        UI-independent library: image loading, OKLab/CMYK math, palette extraction
-src/PaletteMaker.UI/          Shared Avalonia 12 UI (MVVM): the one adaptive screen and its view models
+src/PaletteMaker.UI/          Shared Avalonia 12 UI (MVVM): the bottom-navigation shell, the adaptive screens and their view models
 src/PaletteMaker/             Desktop launcher (Linux, Windows)
 src/PaletteMaker.Android/     Android launcher: activity, share/open-with handling, icon, Play-only ads/billing (Store=play)
 tests/PaletteMaker.Tests/     xUnit tests for the core library
@@ -106,6 +107,10 @@ Built with C#, .NET 10, [Avalonia UI](https://avaloniaui.net/) and [SkiaSharp](h
 ## Security notes
 
 Images are decoded by Skia's native codecs. To limit abuse, files over 100 MB or over about 100 megapixels are rejected before decoding, and only PNG/JPEG/WebP content is accepted (Android converts other formats to PNG with the system decoder first, within the same size limits). The app makes no network connections, and the Android build requests no permissions. Please report vulnerabilities privately through GitHub's *Security → Report a vulnerability* rather than a public issue.
+
+## Credits
+
+The navigation icons are from Google's [Material Icons / Material Symbols](https://fonts.google.com/icons) (Apache License 2.0).
 
 ## License
 

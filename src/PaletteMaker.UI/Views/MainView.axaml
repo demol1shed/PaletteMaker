@@ -11,21 +11,6 @@
     sınıfını ekler; aşağıdaki ".narrow" stilleri telefon düzenini kurar. Palet sütun sayısı da
     genişlikten hesaplanır (SwatchColumns).
   -->
-  <UserControl.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="SheetBackground">#F3F3F3</SolidColorBrush>
-          <SolidColorBrush x:Key="ErrorText">#B3261E</SolidColorBrush>
-        </ResourceDictionary>
-        <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="SheetBackground">#2A2A2A</SolidColorBrush>
-          <SolidColorBrush x:Key="ErrorText">#F2B8B5</SolidColorBrush>
-        </ResourceDictionary>
-      </ResourceDictionary.ThemeDictionaries>
-    </ResourceDictionary>
-  </UserControl.Resources>
-
   <UserControl.Styles>
     <!-- Düzene göre değişen değerler burada (stilde) durur: yerel değer verilirse ".narrow" stili onu ezemez. -->
     <Style Selector="StackPanel#Page">
@@ -44,19 +29,6 @@
       <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
       <Setter Property="BorderThickness" Value="3" />
     </Style>
-    <Style Selector="Button.sheetItem">
-      <Setter Property="HorizontalAlignment" Value="Stretch" />
-      <Setter Property="HorizontalContentAlignment" Value="Left" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="MinHeight" Value="44" />
-      <Setter Property="Padding" Value="12,8" />
-    </Style>
-    <Style Selector="TextBlock.sheetSection">
-      <Setter Property="FontSize" Value="12" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Opacity" Value="0.7" />
-      <Setter Property="Margin" Value="12,10,0,2" />
-    </Style>
     <Style Selector="Border.valueChip">
       <Setter Property="MinHeight" Value="28" />
     </Style>
@@ -67,11 +39,6 @@
     </Style>
     <Style Selector="Grid#Root.narrow Button.quiet">
       <Setter Property="MinHeight" Value="40" />
-    </Style>
-    <Style Selector="TextBlock.hint">
-      <Setter Property="FontSize" Value="12" />
-      <Setter Property="Opacity" Value="0.6" />
-      <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style Selector="Grid#Root.narrow StackPanel#Page">
@@ -97,8 +64,26 @@
     <Style Selector="Grid#Root.narrow Button#CopyAllButton, Grid#Root.narrow Button#ShareButton">
       <Setter Property="MinHeight" Value="40" />
     </Style>
-    <Style Selector="Grid#Root.narrow Button.sheetItem">
-      <Setter Property="MinHeight" Value="48" />
+    <!-- "Uyumda kullan" düğmesi: kartın renk bloğunun sağ üst köşesinde, dokunmada ≥ 40 px. -->
+    <Style Selector="Button.harmonyAction">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Margin" Value="4" />
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="MinWidth" Value="32" />
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="Background" Value="#99000000" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.harmonyAction:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#CC000000" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Grid#Root.narrow Button.harmonyAction">
+      <Setter Property="MinWidth" Value="40" />
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="CornerRadius" Value="20" />
     </Style>
     <Style Selector="Grid#Root.narrow Border.valueChip">
       <Setter Property="MinHeight" Value="40" />
@@ -200,8 +185,15 @@
                       Focusable="True" IsTabStop="True" AutomationProperties.Name="{Binding AccessibleName}"
                       KeyDown="OnSwatchKeyDown" Tapped="OnSwatchTapped">
                 <StackPanel Spacing="6">
-                  <Border Height="80" CornerRadius="8" Background="{Binding Brush}"
-                          BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                  <Grid>
+                    <Border Height="80" CornerRadius="8" Background="{Binding Brush}"
+                            BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                    <Button Classes="harmonyAction" IsVisible="{Binding OffersHarmonyAction}"
+                            AutomationProperties.Name="{Binding HarmonyActionName}" ToolTip.Tip="{loc:T UseInHarmony}"
+                            Click="OnUseInHarmony" Tapped="OnHarmonyActionTapped">
+                      <PathIcon Data="{StaticResource IconPalette}" Width="18" Height="18" />
+                    </Button>
+                  </Grid>
                   <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
                     <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontFamily="monospace" />
                     <TextBlock Grid.Column="1" Text="{Binding ShareText}" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
@@ -233,48 +225,5 @@
         </WrapPanel>
       </StackPanel>
     </ScrollViewer>
-
-    <!-- "Paylaş ve dışa aktar" alt sayfası: perde + alta oturan kart. Perdeye dokunma, Geri ve Esc kapatır. -->
-    <Grid x:Name="ExportSheetHost" RowDefinitions="Auto,*" IsVisible="{Binding IsExportOpen}">
-      <Border x:Name="Scrim" Grid.RowSpan="2" Background="#99000000" Tapped="OnScrimTapped"
-              AutomationProperties.AccessibilityView="Raw" />
-      <Border Grid.Row="0" MinHeight="48" IsHitTestVisible="False" />
-      <Border x:Name="ExportSheet" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" MaxWidth="460"
-              CornerRadius="16,16,0,0" Padding="8,12,8,8" BorderThickness="1,1,1,0"
-              BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-              Background="{DynamicResource SheetBackground}">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-          <StackPanel Spacing="0">
-            <TextBlock Text="{loc:T ExportTitle}" FontSize="18" FontWeight="SemiBold" Margin="12,0,0,4" />
-
-            <TextBlock Classes="sheetSection" Text="{loc:T ExportCopySection}" />
-            <Button Classes="sheetItem" Tag="HexList" Content="{loc:T ExportHexList}" Click="OnExportCopy" />
-            <Button Classes="sheetItem" Tag="Css" Content="{loc:T ExportCss}" Click="OnExportCopy" />
-            <Button Classes="sheetItem" Tag="Json" Content="{loc:T ExportJson}" Click="OnExportCopy" />
-            <Button Classes="sheetItem" Tag="AndroidColorsXml" Content="{loc:T ExportAndroid}" Click="OnExportCopy" />
-
-            <TextBlock Classes="sheetSection" Text="{loc:T ExportFileSection}" />
-            <Button Classes="sheetItem" Content="{loc:T ExportGpl}" Click="OnExportGpl" />
-            <TextBlock Classes="hint" Margin="12,0,12,6" Text="{loc:T ExportGplHint}" />
-            <Button Classes="sheetItem" Content="{loc:T ExportAse}" Click="OnExportAse" />
-            <Button Classes="sheetItem" Content="{loc:T ExportAco}" Click="OnExportAco" />
-            <TextBlock Classes="hint" Margin="12,0,12,6" Text="{loc:T ExportAdobeHint}" />
-            <Button Classes="sheetItem" Content="{loc:T ExportPng}" Click="OnExportPng" />
-
-            <Button x:Name="ExportCloseButton" Classes="sheetItem" HorizontalContentAlignment="Center" Margin="0,8,0,0"
-                    Content="{loc:T ExportClose}" Click="OnScrimTapped" />
-          </StackPanel>
-        </ScrollViewer>
-      </Border>
-    </Grid>
-
-    <!-- Kopyalama bildirimi: içeriğin üstünde, alt ortada -->
-    <Border x:Name="Toast" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="16,0,16,24"
-            Padding="16,10" CornerRadius="20" Background="#E6202020" BorderBrush="#40FFFFFF" BorderThickness="1"
-            IsHitTestVisible="False"
-            IsVisible="{Binding ToastMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-      <TextBlock Text="{Binding ToastMessage}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                 AutomationProperties.LiveSetting="Polite" />
-    </Border>
   </Grid>
 </UserControl>

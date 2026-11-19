@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PaletteMaker.ViewModels"
+             xmlns:ctl="using:PaletteMaker.Controls"
+             xmlns:loc="using:PaletteMaker.Localization"
+             x:Class="PaletteMaker.Views.HarmonyView"
+             x:DataType="vm:HarmonyViewModel">
+
+  <!-- Renk uyumu: RYB çarkı + kural + parlaklık + HEX girişi; sağda (darda altta) 5 renk kartı. -->
+  <UserControl.Styles>
+    <Style Selector="StackPanel#HarmonyPage">
+      <Setter Property="Margin" Value="20" />
+    </Style>
+    <Style Selector="TextBlock#HarmonyTitleText">
+      <Setter Property="FontSize" Value="24" />
+    </Style>
+    <Style Selector="Border.swatch:focus-visible">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+      <Setter Property="BorderThickness" Value="3" />
+    </Style>
+    <Style Selector="Border.valueChip">
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style Selector="Grid#HarmonyRoot.narrow StackPanel#HarmonyPage">
+      <Setter Property="Margin" Value="16" />
+    </Style>
+    <Style Selector="Grid#HarmonyRoot.narrow TextBlock#HarmonyTitleText">
+      <Setter Property="FontSize" Value="20" />
+    </Style>
+    <!-- Dar düzen: kontroller üstte, kartlar altta, ikisi de tam genişlikte. -->
+    <!-- Genişte kartlar sağ sütunda. Yerleşim değerleri stilde durur (yerel değer ".narrow" stilini ezerdi). -->
+    <Style Selector="StackPanel#CardsPanel">
+      <Setter Property="Grid.Column" Value="1" />
+    </Style>
+    <Style Selector="Grid#HarmonyRoot.narrow StackPanel#ControlsPanel">
+      <Setter Property="Grid.ColumnSpan" Value="2" />
+    </Style>
+    <Style Selector="Grid#HarmonyRoot.narrow StackPanel#CardsPanel">
+      <Setter Property="Grid.Row" Value="1" />
+      <Setter Property="Grid.Column" Value="0" />
+      <Setter Property="Grid.ColumnSpan" Value="2" />
+    </Style>
+    <!-- Dokunma hedefleri: dar düzende en az 40 px. -->
+    <Style Selector="Grid#HarmonyRoot.narrow ComboBox, Grid#HarmonyRoot.narrow TextBox, Grid#HarmonyRoot.narrow Button">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector="Grid#HarmonyRoot.narrow Border.valueChip">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid x:Name="HarmonyRoot" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+    <ScrollViewer x:Name="HarmonyScroll" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel x:Name="HarmonyPage" Spacing="14" MaxWidth="1100">
+
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock x:Name="HarmonyTitleText" Text="{loc:T HarmonyTitle}" FontWeight="SemiBold"
+                     VerticalAlignment="Center" TextWrapping="Wrap" />
+          <ComboBox x:Name="HarmonyFormatBox" Grid.Column="1" MinWidth="104" VerticalAlignment="Center"
+                    AutomationProperties.Name="{loc:T FormatLabel}" SelectedIndex="{Binding FormatIndex}">
+            <ComboBoxItem Content="RGB" />
+            <ComboBoxItem Content="CMYK" />
+            <ComboBoxItem Content="HSL" />
+            <ComboBoxItem Content="OKLCH" />
+          </ComboBox>
+        </Grid>
+
+        <Grid x:Name="HarmonyBody" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="24" RowSpacing="14">
+          <StackPanel x:Name="ControlsPanel" Spacing="12">
+            <StackPanel Spacing="2">
+              <TextBlock Text="{loc:T HarmonyRuleLabel}" />
+              <ComboBox x:Name="RuleBox" HorizontalAlignment="Stretch" SelectedIndex="{Binding RuleIndex}"
+                        AutomationProperties.Name="{loc:T HarmonyRuleLabel}">
+                <ComboBoxItem Content="{loc:T RuleAnalogous}" />
+                <ComboBoxItem Content="{loc:T RuleMonochromatic}" />
+                <ComboBoxItem Content="{loc:T RuleTriad}" />
+                <ComboBoxItem Content="{loc:T RuleComplementary}" />
+                <ComboBoxItem Content="{loc:T RuleSplitComplementary}" />
+                <ComboBoxItem Content="{loc:T RuleDoubleSplit}" />
+                <ComboBoxItem Content="{loc:T RuleSquare}" />
+                <ComboBoxItem Content="{loc:T RuleCompound}" />
+                <ComboBoxItem Content="{loc:T RuleShades}" />
+              </ComboBox>
+            </StackPanel>
+
+            <ctl:ColorWheel x:Name="Wheel" HorizontalAlignment="Center"
+                            Markers="{Binding Colors}" Value="{Binding BaseValue}"
+                            AutomationProperties.Name="{Binding WheelName}"
+                            AutomationProperties.HelpText="{loc:T WheelHint}" />
+            <TextBlock Classes="hint" Text="{loc:T WheelHint}" />
+
+            <StackPanel Spacing="2">
+              <TextBlock Text="{loc:T BrightnessLabel}" />
+              <Slider x:Name="BrightnessSlider" Minimum="0" Maximum="1" Value="{Binding BaseValue}"
+                      AutomationProperties.Name="{loc:T BrightnessLabel}" />
+            </StackPanel>
+
+            <StackPanel Spacing="2">
+              <TextBlock Text="{loc:T BaseHexLabel}" />
+              <TextBox x:Name="HexBox" Text="{Binding HexInput}" PlaceholderText="#E63946" MaxLength="9" FontFamily="monospace"
+                       AutomationProperties.Name="{loc:T BaseHexLabel}" />
+              <TextBlock x:Name="HexError" Classes="hint" Opacity="1" Foreground="{DynamicResource ErrorText}"
+                         Text="{loc:T HexInvalid}" IsVisible="{Binding HexInvalid}"
+                         AutomationProperties.LiveSetting="Assertive" />
+            </StackPanel>
+          </StackPanel>
+
+          <StackPanel x:Name="CardsPanel" Spacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+              <Border />
+              <Button x:Name="HarmonyCopyAllButton" Grid.Column="1" Content="{loc:T CopyAll}" VerticalContentAlignment="Center"
+                      IsEnabled="{Binding HasPalette}" Click="OnCopyAll" />
+              <Button x:Name="HarmonyShareButton" Grid.Column="2" Content="{loc:T ShareButton}" VerticalContentAlignment="Center"
+                      IsEnabled="{Binding HasPalette}" Click="OnShare" />
+            </Grid>
+
+            <ItemsControl x:Name="HarmonyList" ItemsSource="{Binding Swatches}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="10" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SwatchViewModel">
+                  <Border Classes="swatch" Padding="8" CornerRadius="12" Cursor="Hand"
+                          Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                          Focusable="True" IsTabStop="True" AutomationProperties.Name="{Binding AccessibleName}"
+                          KeyDown="OnSwatchKeyDown" Tapped="OnSwatchTapped">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                      <Border Width="72" Height="64" CornerRadius="8" Background="{Binding Brush}"
+                              BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+                        <TextBlock Text="{Binding Hex}" FontWeight="SemiBold" FontFamily="monospace" />
+                        <Border Classes="valueChip" CornerRadius="8" Padding="8,4" HorizontalAlignment="Left"
+                                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                AutomationProperties.Name="{Binding ValueText}" Tapped="OnValueTapped">
+                          <TextBlock Text="{Binding ValueText}" FontSize="12" Opacity="0.9" TextWrapping="Wrap"
+                                     VerticalAlignment="Center" />
+                        </Border>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Classes="hint" Text="{loc:T CardHint}" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

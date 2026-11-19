@@ -155,13 +155,7 @@ public partial class MainView : UserControl
         if (file != null) await LoadAsync(file);
     }
 
-    private async Task CopyAsync(string text, string toast)
-    {
-        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard == null) return;
-        await clipboard.SetTextAsync(text);
-        if (!App.SystemShowsClipboardConfirmation) Vm?.ShowToast(toast);
-    }
+    private Task CopyAsync(string text, string toast) => ClipboardHelper.CopyAsync(this, Vm, text, toast);
 
     private async void OnSwatchTapped(object? sender, TappedEventArgs e)
     {
@@ -193,163 +187,23 @@ public partial class MainView : UserControl
             await CopyAsync(s.ValueText, Loc.Get("ToastCopied"));
     }
 
-    // ---- Paylaş ve dışa aktar (alt sayfa) ---------------------------------------------------
-
-    private static readonly FilePickerFileType GimpPaletteType = new("GIMP / Resprite palette")
-    {
-        Patterns = ["*.gpl"],
-        // "text/plain" olursa Android dosya adına ".txt" ekler; genel ikili tür adı olduğu gibi bırakır.
-        MimeTypes = ["application/octet-stream"],
-    };
-
-    private static readonly FilePickerFileType AseType = new("Adobe Swatch Exchange")
-    {
-        Patterns = ["*.ase"],
-        MimeTypes = ["application/octet-stream"],
-    };
-
-    private static readonly FilePickerFileType AcoType = new("Photoshop swatches")
-    {
-        Patterns = ["*.aco"],
-        MimeTypes = ["application/octet-stream"],
-    };
-
-    private static readonly FilePickerFileType PngType = new("PNG")
-    {
-        Patterns = ["*.png"],
-        MimeTypes = ["image/png"],
-    };
+    // ---- Paylaş (alt sayfa kabukta, ExportSheet) ---------------------------------------------
 
     private void OnShare(object? sender, RoutedEventArgs e)
     {
         if (Vm is { HasPalette: true } vm) vm.IsExportOpen = true;
     }
 
-    private void OnScrimTapped(object? sender, RoutedEventArgs e) => CloseExportSheet();
+    // ---- Görsel paletinden Renk uyumuna köprü -------------------------------------------------
 
-    private void CloseExportSheet()
+    private void OnUseInHarmony(object? sender, RoutedEventArgs e)
     {
-        if (Vm is { } vm) vm.IsExportOpen = false;
+        e.Handled = true;
+        if (Vm is { } vm && (sender as Control)?.DataContext is SwatchViewModel s) vm.RequestHarmonyBase(s.PaletteColor);
     }
 
-    private async void OnExportCopy(object? sender, RoutedEventArgs e)
-    {
-        if (Vm is not { } vm || (sender as Control)?.Tag is not string tag || !Enum.TryParse<ExportKind>(tag, out var kind)) return;
-        string label = kind switch
-        {
-            ExportKind.Css => Loc.Get("ExportCss"),
-            ExportKind.Json => Loc.Get("ExportJson"),
-            ExportKind.AndroidColorsXml => Loc.Get("ExportAndroid"),
-            _ => Loc.Get("ExportHexList"),
-        };
-        vm.IsExportOpen = false;
-        await CopyAsync(vm.ExportText(kind), Loc.Format("ToastHexCopied", label));
-    }
-
-    /// <summary>Resprite/GIMP paleti: gerçek bir .gpl dosyası kaydeder (Resprite içe aktarmayı dosya seçiciyle yapar).</summary>
-    private async void OnExportGpl(object? sender, RoutedEventArgs e)
-    {
-        if (Vm is not { } vm) return;
-        vm.IsExportOpen = false;
-        var bytes = new System.Text.UTF8Encoding(false).GetBytes(vm.ExportText(ExportKind.GimpPalette));
-        await SaveFileAsync(bytes, vm.ExportFileName("gpl"), GimpPaletteType, "gpl");
-    }
-
-    /// <summary>Adobe Swatch Exchange (.ase): Illustrator, InDesign, Photoshop.</summary>
-    private async void OnExportAse(object? sender, RoutedEventArgs e)
-    {
-        if (Vm is not { } vm) return;
-        vm.IsExportOpen = false;
-        await SaveFileAsync(vm.ExportAse(), vm.ExportFileName("ase"), AseType, "ase");
-    }
-
-    /// <summary>Photoshop renk örnekleri (.aco).</summary>
-    private async void OnExportAco(object? sender, RoutedEventArgs e)
-    {
-        if (Vm is not { } vm) return;
-        vm.IsExportOpen = false;
-        await SaveFileAsync(vm.ExportAco(), vm.ExportFileName("aco"), AcoType, "aco");
-    }
-
-    private async void OnExportPng(object? sender, RoutedEventArgs e)
-    {
-        if (Vm is not { } vm) return;
-        vm.IsExportOpen = false;
-        try
-        {
-            var png = await Task.Run(vm.RenderCardPng);
-            var name = vm.ExportFileName("png");
-            if (App.ShareService is { } share) await share.SharePngAsync(png, name, Loc.Get("ExportShareTitle"));
-            else await SaveFileAsync(png, name, PngType, "png");
-        }
-        catch (Exception)
-        {
-            vm.ShowToast(Loc.Get("ToastSaveFailed"));
-        }
-    }
-
-    /// <summary>"Farklı kaydet" iletişim kutusu (Android'de sistem SAF penceresi, izin gerekmez). İptal sessizce geçilir.</summary>
-    private async Task SaveFileAsync(byte[] data, string suggestedName, FilePickerFileType type, string extension)
-    {
-        var top = TopLevel.GetTopLevel(this);
-        if (top == null) return;
-        try
-        {
-            var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                SuggestedFileName = suggestedName,
-                DefaultExtension = extension,
-                FileTypeChoices = [type],
-                ShowOverwritePrompt = true,
-            });
-            if (file == null) return;
-            await using var stream = await file.OpenWriteAsync();
-            if (stream.CanSeek) stream.SetLength(0); // üzerine yazarken eski içerikten artık kalmasın
-            await stream.WriteAsync(data);
-            await stream.FlushAsync();
-            Vm?.ShowToast(Loc.Get("ToastSaved"));
-        }
-        catch (Exception)
-        {
-            Vm?.ShowToast(Loc.Get("ToastSaveFailed"));
-        }
-    }
-
-    protected override void OnKeyDown(KeyEventArgs e)
-    {
-        base.OnKeyDown(e);
-        if (e.Key == Key.Escape && Vm is { IsExportOpen: true })
-        {
-            CloseExportSheet();
-            e.Handled = true;
-        }
-    }
-
-    private TopLevel? _backTopLevel;
-
-    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        base.OnAttachedToVisualTree(e);
-        _backTopLevel = TopLevel.GetTopLevel(this);
-        if (_backTopLevel != null) _backTopLevel.BackRequested += OnBackRequested;
-    }
-
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        if (_backTopLevel != null) _backTopLevel.BackRequested -= OnBackRequested;
-        _backTopLevel = null;
-        base.OnDetachedFromVisualTree(e);
-    }
-
-    /// <summary>Android Geri tuşu: alt sayfa açıksa önce onu kapatır.</summary>
-    private void OnBackRequested(object? sender, RoutedEventArgs e)
-    {
-        if (Vm is { IsExportOpen: true })
-        {
-            CloseExportSheet();
-            e.Handled = true;
-        }
-    }
+    /// <summary>Düğmeye dokunma karta (hex kopyalama) yayılmasın.</summary>
+    private void OnHarmonyActionTapped(object? sender, TappedEventArgs e) => e.Handled = true;
 
     private async void OnCopyAll(object? sender, RoutedEventArgs e)
     {

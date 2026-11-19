@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PaletteMaker.Monetization;
@@ -8,14 +7,11 @@ using PaletteMaker.Localization;
 
 namespace PaletteMaker.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : PaletteScreenViewModel
 {
     private LoadedImage? _image;
     private CancellationTokenSource? _computeCts;
-    private CancellationTokenSource? _toastCts;
     private int _loadVersion;
-
-    public ObservableCollection<SwatchViewModel> Swatches { get; } = new();
 
     [ObservableProperty] private Bitmap? _preview;
     [ObservableProperty] private string? _fileName;
@@ -27,24 +23,12 @@ public partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasError))]
     [NotifyPropertyChangedFor(nameof(ShowDropHint))]
     private string? _errorMessage;
-    [ObservableProperty] private string? _toastMessage;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MaxColorsText))]
     private double _maxColors = PaletteOptions.DefaultMaxColors;
 
     [ObservableProperty] private double _mergeStrength = PaletteOptions.DefaultMergeStrength;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FormatIndex))]
-    private ValueFormat _valueFormat = ValueFormat.Rgb;
-
-    /// <summary>Başlıktaki açılır menünün seçili sırası (<see cref="ValueFormat"/> ile aynı sıra).</summary>
-    public int FormatIndex
-    {
-        get => (int)ValueFormat;
-        set { if (Enum.IsDefined((ValueFormat)value)) ValueFormat = (ValueFormat)value; }
-    }
 
     /// <summary>
     /// Platformun HEIC/AVIF gibi ek biçimleri PNG'ye çeviren çözücüsü (yalnızca Android atar). Boşsa yalnızca PNG/JPEG/WebP açılır.
@@ -54,26 +38,22 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Yeni bir görselden palet başarıyla çıkınca bir kez tetiklenir (Play değerlendirme sayacı bunu kullanır).</summary>
     public event EventHandler? PaletteLoaded;
 
-    /// <summary>"Paylaş / dışa aktar" alt sayfası açık mı.</summary>
-    [ObservableProperty] private bool _isExportOpen;
+    public override bool HasShares => true;
+    public override bool OffersHarmonyAction => true;
 
-    /// <summary>Şu anki palet (kartlarla aynı sırada: paya göre azalan).</summary>
-    public IReadOnlyList<PaletteColor> Palette { get; private set; } = [];
+    /// <summary>Bir kart "uyumda kullan" ile seçilince tetiklenir (kabuk Renk uyumu sekmesine geçirir).</summary>
+    public event EventHandler<PaletteColor>? HarmonyBaseRequested;
+
+    public void RequestHarmonyBase(PaletteColor color) => HarmonyBaseRequested?.Invoke(this, color);
 
     public string MaxColorsText => ((int)Math.Round(MaxColors)).ToString(System.Globalization.CultureInfo.InvariantCulture);
     public bool HasImage => _image != null;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     /// <summary>"Görsel seç / sürükle" ipucu: görsel yokken ve hata kartı açık değilken.</summary>
     public bool ShowDropHint => !HasImage && !HasError;
-    public bool HasPalette => Swatches.Count > 0;
 
     partial void OnMaxColorsChanged(double value) => _ = RecomputeAsync();
     partial void OnMergeStrengthChanged(double value) => _ = RecomputeAsync();
-
-    partial void OnValueFormatChanged(ValueFormat value)
-    {
-        foreach (var s in Swatches) s.Format = value;
-    }
 
     /// <summary>Yerel dosya yolundan yükler (komut satırı, masaüstü seçici/sürükle-bırak). Uzantı zorunludur.</summary>
     public Task LoadAsync(string path) =>
@@ -174,10 +154,7 @@ public partial class MainViewModel : ObservableObject
             var palette = await Task.Run(() => PaletteExtractor.Extract(image.Rgba, options, cts.Token), cts.Token);
             if (cts.IsCancellationRequested) return;
 
-            Swatches.Clear();
-            Palette = palette;
-            foreach (var c in palette) Swatches.Add(new SwatchViewModel(c, ValueFormat));
-            OnPropertyChanged(nameof(HasPalette));
+            SetPalette(palette);
             ErrorMessage = palette.Count == 0 ? Loc.Get("ErrNoColors") : null;
         }
         catch (OperationCanceledException) { }
@@ -185,16 +162,6 @@ public partial class MainViewModel : ObservableObject
         {
             if (_computeCts == cts) IsBusy = false;
         }
-    }
-
-    public async void ShowToast(string message)
-    {
-        _toastCts?.Cancel();
-        var cts = _toastCts = new CancellationTokenSource();
-        ToastMessage = message;
-        try { await Task.Delay(1500, cts.Token); }
-        catch (OperationCanceledException) { return; }
-        if (_toastCts == cts) ToastMessage = null;
     }
 
     /// <summary>Core'un hata türünü yerelleştirilmiş kullanıcı metnine çevirir.</summary>
@@ -210,38 +177,6 @@ public partial class MainViewModel : ObservableObject
         _ => "ErrUnexpected",
     });
 
-    public string AllHexText() => PaletteExport.HexList(Palette);
-
-    /// <summary>Verilen türde palet metni (panoya kopyalama / dosyaya yazma).</summary>
-    public string ExportText(ExportKind kind) => kind switch
-    {
-        ExportKind.Css => PaletteExport.CssVariables(Palette),
-        ExportKind.Json => PaletteExport.Json(Palette),
-        ExportKind.AndroidColorsXml => PaletteExport.AndroidColorsXml(Palette),
-        ExportKind.GimpPalette => PaletteExport.GimpPalette(Palette, BaseFileName),
-        _ => PaletteExport.HexList(Palette),
-    };
-
     /// <summary>Görsel adından uzantısız, dosya sistemi için güvenli bir ad (yoksa "palette").</summary>
-    public string BaseFileName
-    {
-        get
-        {
-            var name = string.IsNullOrWhiteSpace(FileName) ? "" : Path.GetFileNameWithoutExtension(FileName);
-            var safe = new string(name.Select(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or ' ' ? ch : '_').ToArray()).Trim();
-            return safe.Length == 0 ? "palette" : safe;
-        }
-    }
-
-    /// <summary>Örn. "gun-batimi-palette.gpl".</summary>
-    public string ExportFileName(string extension) => $"{BaseFileName}-palette.{extension}";
-
-    /// <summary>Paletti paylaşılabilir PNG kart olarak çizer (arka planda çağrılması önerilir).</summary>
-    public byte[] RenderCardPng() => PaletteCardRenderer.RenderPng(Palette);
-
-    /// <summary>Adobe Swatch Exchange (.ase): Illustrator / InDesign / Photoshop.</summary>
-    public byte[] ExportAse() => PaletteExport.AdobeSwatchExchange(Palette);
-
-    /// <summary>Photoshop renk örnekleri (.aco).</summary>
-    public byte[] ExportAco() => PaletteExport.PhotoshopSwatches(Palette);
+    public override string BaseFileName => SafeName(FileName, "palette");
 }

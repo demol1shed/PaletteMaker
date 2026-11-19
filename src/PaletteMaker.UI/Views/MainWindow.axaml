@@ -6,6 +6,6 @@
         Title="{loc:T AppTitle}"
         Width="940" Height="700" MinWidth="360" MinHeight="480"
         WindowStartupLocation="CenterScreen">
-  <!-- Masaüstü kabuğu. Tüm arayüz MainView'dadır; Android aynı görünümü penceresiz kullanır. -->
-  <views:MainView />
+  <!-- Masaüstü kabuğu. Tüm arayüz ShellView'dadır (sekmeler: Ayarlar, Görsel/MainView, Uyum); Android aynı görünümü penceresiz kullanır. -->
+  <views:ShellView />
 </Window>

@@ -16,6 +16,11 @@ public partial class App : Application
     /// </summary>
     public MainViewModel MainVm { get; } = new();
 
+    /// <summary>Kabuk (seçili sekme + üç ekran). <see cref="MainVm"/> onun "Görsel" ekranıdır; sekme durumu etkinlik yeniden oluşunca korunur.</summary>
+    public ShellViewModel ShellVm { get; }
+
+    public App() => ShellVm = new ShellViewModel(MainVm);
+
     /// <summary>
     /// Android Play sürümünün reklam kontrolünü üreten fabrika (<c>MainActivity</c> görünüm oluşmadan önce atar).
     /// Boşsa sayfada reklam alanı hiç oluşturulmaz.
@@ -34,7 +39,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow { DataContext = MainVm };
+            desktop.MainWindow = new MainWindow { DataContext = ShellVm };
             // Komut satırından verilen dosya (örn. "birlikte aç") hemen yüklenir.
             if (desktop.Args is { Length: > 0 } args && File.Exists(args[0]))
                 desktop.MainWindow.Opened += async (_, _) => await MainVm.LoadAsync(args[0]);
@@ -42,11 +47,11 @@ public partial class App : Application
         else if (ApplicationLifetime is IActivityApplicationLifetime activity)
         {
             // Android: her etkinlik için yeni görünüm, aynı görünüm modeli.
-            activity.MainViewFactory = () => new MainView { DataContext = MainVm };
+            activity.MainViewFactory = () => new ShellView { DataContext = ShellVm };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
-            singleView.MainView = new MainView { DataContext = MainVm };
+            singleView.MainView = new ShellView { DataContext = ShellVm };
         }
         base.OnFrameworkInitializationCompleted();
     }

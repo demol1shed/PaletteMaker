@@ -15,7 +15,8 @@ public static class PaletteCardRenderer
     /// <summary>Renk sayısına göre sütun: az renkte büyük karolar, çok renkte (48'e kadar) küçük karolar.</summary>
     public static int ColumnsFor(int count) => count <= 3 ? Math.Max(count, 1) : count <= 12 ? 3 : count <= 24 ? 4 : 6;
 
-    public static byte[] RenderPng(IReadOnlyList<PaletteColor> palette)
+    /// <param name="showShare">false: HEX'in altına görseldeki pay yazılmaz (renk uyumu paletleri).</param>
+    public static byte[] RenderPng(IReadOnlyList<PaletteColor> palette, bool showShare = true)
     {
         if (palette.Count == 0) throw new ArgumentException("Palette is empty.", nameof(palette));
         int cols = ColumnsFor(palette.Count);
@@ -39,9 +40,16 @@ public static class PaletteCardRenderer
             var ink = luminance > 0.55 ? SKColors.Black : SKColors.White;
             using var paint = new SKPaint { Color = ink, IsAntialias = true };
             float pad = tile * 0.07f;
-            canvas.DrawText(c.Hex, x + pad, y + tile - pad - shareFont.Size * 1.3f, SKTextAlign.Left, hexFont, paint);
-            canvas.DrawText(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{c.Share * 100:0.#}%"),
-                x + pad, y + tile - pad, SKTextAlign.Left, shareFont, paint);
+            if (showShare)
+            {
+                canvas.DrawText(c.Hex, x + pad, y + tile - pad - shareFont.Size * 1.3f, SKTextAlign.Left, hexFont, paint);
+                canvas.DrawText(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{c.Share * 100:0.#}%"),
+                    x + pad, y + tile - pad, SKTextAlign.Left, shareFont, paint);
+            }
+            else
+            {
+                canvas.DrawText(c.Hex, x + pad, y + tile - pad, SKTextAlign.Left, hexFont, paint);
+            }
         }
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);

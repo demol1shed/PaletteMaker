@@ -40,10 +40,11 @@ public class ExportSheetTests
         Dispatcher.UIThread.RunJobs();
     }
 
-    private static async Task<(Window W, MainView V, MainViewModel Vm)> OpenAsync(int width, int height, bool loadImage = true, bool dark = false, string fileName = "ornek.png")
+    private static async Task<(Window W, ShellView V, MainViewModel Vm)> OpenAsync(int width, int height, bool loadImage = true, bool dark = false, string fileName = "ornek.png")
     {
-        var vm = new MainViewModel();
-        var view = new MainView { DataContext = vm };
+        var shell = new ShellViewModel(new MainViewModel());
+        var vm = shell.Main;
+        var view = new ShellView { DataContext = shell };
         var window = new Window { Width = width, Height = height, Content = view, RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light };
         window.Show();
         if (loadImage)
@@ -58,11 +59,11 @@ public class ExportSheetTests
     private static Rect BoundsIn(Visual v, Visual root) => new(v.TranslatePoint(new Point(0, 0), root)!.Value, v.Bounds.Size);
     private static void Click(Button b) { b.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Settle(); }
 
-    private static IEnumerable<Button> SheetButtons(MainView v) =>
+    private static IEnumerable<Button> SheetButtons(ShellView v) =>
         // Kaydırma çubuğunun ok/iz düğmeleri (RepeatButton) sayfa öğesi değildir; sayfa kaydırılırken ortaya çıkarlar.
-        v.FindControl<Border>("ExportSheet")!.GetVisualDescendants().OfType<Button>().Where(b => b is not RepeatButton);
+        v.Find<Border>("SheetCard").GetVisualDescendants().OfType<Button>().Where(b => b is not RepeatButton);
 
-    private static Button SheetButton(MainView v, string tag) => SheetButtons(v).First(b => (b.Tag as string) == tag);
+    private static Button SheetButton(ShellView v, string tag) => SheetButtons(v).First(b => (b.Tag as string) == tag);
 
     [AvaloniaFact]
     public async Task Share_button_is_disabled_until_there_is_a_palette_and_opens_the_sheet()
@@ -70,11 +71,11 @@ public class ExportSheetTests
         var (w, v, vm) = await OpenAsync(360, 740, loadImage: false);
         try
         {
-            var share = v.FindControl<Button>("ShareButton")!;
+            var share = v.Find<Button>("ShareButton");
             Assert.False(share.IsEnabled);
             Click(share);
             Assert.False(vm.IsExportOpen);
-            Assert.False(v.FindControl<Grid>("ExportSheetHost")!.IsVisible);
+            Assert.False(v.Find<Grid>("ExportSheetHost").IsVisible);
 
             var png = Png();
             await vm.LoadAsync("ornek.png", () => Task.FromResult<Stream>(new MemoryStream(png)));
@@ -82,7 +83,7 @@ public class ExportSheetTests
             Assert.True(share.IsEnabled);
             Click(share);
             Assert.True(vm.IsExportOpen);
-            Assert.True(v.FindControl<Grid>("ExportSheetHost")!.IsVisible);
+            Assert.True(v.Find<Grid>("ExportSheetHost").IsVisible);
         }
         finally { w.Close(); }
     }
@@ -93,9 +94,9 @@ public class ExportSheetTests
         var (w, v, vm) = await OpenAsync(360, 740);
         try
         {
-            void Open() { vm.IsExportOpen = true; Settle(); Assert.True(v.FindControl<Grid>("ExportSheetHost")!.IsVisible); }
+            void Open() { vm.IsExportOpen = true; Settle(); Assert.True(v.Find<Grid>("ExportSheetHost").IsVisible); }
 
-            Open(); Click(v.FindControl<Button>("ExportCloseButton")!); Assert.False(vm.IsExportOpen);
+            Open(); Click(v.Find<Button>("ExportCloseButton")); Assert.False(vm.IsExportOpen);
 
             // Gerçek fare tıklaması: sayfanın üstündeki perde alanına (alt sayfa en az 48 px aşağıda başlar).
             Open();
@@ -107,7 +108,7 @@ public class ExportSheetTests
 
             // Android Geri tuşu: olay platformdan gelir, burada işleyiciyi doğrudan çağırıyoruz.
             Open();
-            var back = typeof(MainView).GetMethod("OnBackRequested", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+            var back = typeof(ShellView).GetMethod("OnBackRequested", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
             var args = new RoutedEventArgs();
             back.Invoke(v, [null, args]);
             Settle();
@@ -158,7 +159,7 @@ public class ExportSheetTests
         var (w, v, vm) = await OpenAsync(360, 740);
         try
         {
-            var box = v.FindControl<ComboBox>("FormatBox")!;
+            var box = v.Find<ComboBox>("FormatBox");
             Assert.Equal(4, box.Items.Count);
             box.SelectedIndex = index; Settle();
             Assert.Equal((ValueFormat)index, vm.ValueFormat);
@@ -209,14 +210,14 @@ public class ExportSheetTests
             try
             {
                 vm.IsExportOpen = true; Settle();
-                var sheet = v.FindControl<Border>("ExportSheet")!;
+                var sheet = v.Find<Border>("SheetCard");
                 var b = BoundsIn(sheet, v);
                 Assert.True(b.Left >= -0.5 && b.Right <= width + 0.5, $"{culture}: alt sayfa yatayda taşıyor {b.Left:0.#}–{b.Right:0.#}");
                 Assert.True(b.Top >= 47.5 && b.Bottom <= height + 0.5, $"{culture}: alt sayfa dikeyde sığmıyor {b.Top:0.#}–{b.Bottom:0.#} / {height}");
                 Assert.True(b.Width <= 460.5);
 
                 // Alçak pencerede içerik sığmazsa sayfa içinde kaydırılabilir; en az başlık ve kapat düğmesi erişilebilir kalır.
-                var close = v.FindControl<Button>("ExportCloseButton")!;
+                var close = v.Find<Button>("ExportCloseButton");
                 var scroll = sheet.GetVisualDescendants().OfType<ScrollViewer>().First();
                 scroll.Offset = new Vector(0, Math.Max(0, scroll.Extent.Height - scroll.Viewport.Height)); Settle();
                 var cb = BoundsIn(close, v);
@@ -242,7 +243,7 @@ public class ExportSheetTests
         {
             vm.MaxColors = 48; await Task.Delay(400); Settle();
             vm.IsExportOpen = true; Settle();
-            var b = BoundsIn(v.FindControl<Border>("ExportSheet")!, v);
+            var b = BoundsIn(v.Find<Border>("SheetCard"), v);
             Assert.True(b.Bottom <= 740.5 && b.Right <= 360.5);
         }
         finally { w.Close(); }

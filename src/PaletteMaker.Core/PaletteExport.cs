@@ -35,8 +35,11 @@ public static class PaletteExport
         return sb.Append("</resources>").ToString();
     }
 
-    /// <summary>JSON dizisi: her renk için hex, rgb, cmyk, hsl, oklch metinleri ve görseldeki pay (0–1, 4 ondalık).</summary>
-    public static string Json(IReadOnlyList<PaletteColor> palette)
+    /// <summary>
+    /// JSON dizisi: her renk için hex, rgb, cmyk, hsl, oklch metinleri ve görseldeki pay (0–1, 4 ondalık).
+    /// Pay görselden gelmeyen paletlerde (renk uyumu) anlamsızdır: <paramref name="includeShare"/> = false alanı yazmaz.
+    /// </summary>
+    public static string Json(IReadOnlyList<PaletteColor> palette, bool includeShare = true)
     {
         using var stream = new MemoryStream();
         using (var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
@@ -50,7 +53,7 @@ public static class PaletteExport
                 w.WriteString("cmyk", c.CmykText);
                 w.WriteString("hsl", c.HslText);
                 w.WriteString("oklch", c.OklchText);
-                w.WriteNumber("share", Math.Round(c.Share, 4));
+                if (includeShare) w.WriteNumber("share", Math.Round(c.Share, 4));
                 w.WriteEndObject();
             }
             w.WriteEndArray();

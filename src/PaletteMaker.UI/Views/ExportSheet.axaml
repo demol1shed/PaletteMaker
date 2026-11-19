@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PaletteMaker.ViewModels"
+             xmlns:loc="using:PaletteMaker.Localization"
+             x:Class="PaletteMaker.Views.ExportSheet"
+             x:DataType="vm:PaletteScreenViewModel">
+
+  <!--
+    "Paylaş ve dışa aktar" alt sayfası: perde + alta oturan kart. Kabukta (ShellView) tüm sekmelerin ve gezinme çubuğunun
+    üstünde durur; DataContext etkin palet ekranıdır (Ayarlar'da boş → görünmez). Perdeye dokunma, Geri ve Esc kapatır.
+  -->
+  <UserControl.Styles>
+    <Style Selector="Button.sheetItem">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="Padding" Value="12,8" />
+    </Style>
+    <Style Selector="TextBlock.sheetSection">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="Margin" Value="12,10,0,2" />
+    </Style>
+    <Style Selector="Grid#ExportSheetHost.narrow Button.sheetItem">
+      <Setter Property="MinHeight" Value="48" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid x:Name="ExportSheetHost" RowDefinitions="Auto,*" IsVisible="{Binding IsExportOpen, FallbackValue=False}">
+    <Border x:Name="Scrim" Grid.RowSpan="2" Background="#99000000" Tapped="OnScrimTapped"
+            AutomationProperties.AccessibilityView="Raw" />
+    <Border Grid.Row="0" MinHeight="48" IsHitTestVisible="False" />
+    <Border x:Name="SheetCard" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" MaxWidth="460"
+            CornerRadius="16,16,0,0" Padding="8,12,8,8" BorderThickness="1,1,1,0"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+            Background="{DynamicResource SheetBackground}">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="0">
+          <TextBlock Text="{loc:T ExportTitle}" FontSize="18" FontWeight="SemiBold" Margin="12,0,0,4" />
+
+          <TextBlock Classes="sheetSection" Text="{loc:T ExportCopySection}" />
+          <Button Classes="sheetItem" Tag="HexList" Content="{loc:T ExportHexList}" Click="OnExportCopy" />
+          <Button Classes="sheetItem" Tag="Css" Content="{loc:T ExportCss}" Click="OnExportCopy" />
+          <Button Classes="sheetItem" Tag="Json" Content="{loc:T ExportJson}" Click="OnExportCopy" />
+          <Button Classes="sheetItem" Tag="AndroidColorsXml" Content="{loc:T ExportAndroid}" Click="OnExportCopy" />
+
+          <TextBlock Classes="sheetSection" Text="{loc:T ExportFileSection}" />
+          <Button Classes="sheetItem" Content="{loc:T ExportGpl}" Click="OnExportGpl" />
+          <TextBlock Classes="hint" Margin="12,0,12,6" Text="{loc:T ExportGplHint}" />
+          <Button Classes="sheetItem" Content="{loc:T ExportAse}" Click="OnExportAse" />
+          <Button Classes="sheetItem" Content="{loc:T ExportAco}" Click="OnExportAco" />
+          <TextBlock Classes="hint" Margin="12,0,12,6" Text="{loc:T ExportAdobeHint}" />
+          <Button Classes="sheetItem" Content="{loc:T ExportPng}" Click="OnExportPng" />
+
+          <Button x:Name="ExportCloseButton" Classes="sheetItem" HorizontalContentAlignment="Center" Margin="0,8,0,0"
+                  Content="{loc:T ExportClose}" Click="OnScrimTapped" />
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</UserControl>

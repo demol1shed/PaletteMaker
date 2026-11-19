@@ -58,4 +58,28 @@
   <data name="ToastSaveFailed" xml:space="preserve"><value>Could not save the file</value></data>
   <data name="PreviewLabel" xml:space="preserve"><value>Preview of the selected image</value></data>
   <data name="ChooseImage" xml:space="preserve"><value>Choose an image</value></data>
+  <data name="NavSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="NavImage" xml:space="preserve"><value>Image</value></data>
+  <data name="NavHarmony" xml:space="preserve"><value>Harmony</value></data>
+  <data name="NavBarLabel" xml:space="preserve"><value>Main navigation</value></data>
+  <data name="SettingsTitle" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsComingSoon" xml:space="preserve"><value>Settings are coming soon.</value></data>
+  <data name="HarmonyTitle" xml:space="preserve"><value>Color harmony</value></data>
+  <data name="HarmonyRuleLabel" xml:space="preserve"><value>Harmony rule</value></data>
+  <data name="RuleAnalogous" xml:space="preserve"><value>Analogous</value></data>
+  <data name="RuleMonochromatic" xml:space="preserve"><value>Monochromatic</value></data>
+  <data name="RuleTriad" xml:space="preserve"><value>Triad</value></data>
+  <data name="RuleComplementary" xml:space="preserve"><value>Complementary</value></data>
+  <data name="RuleSplitComplementary" xml:space="preserve"><value>Split complementary</value></data>
+  <data name="RuleDoubleSplit" xml:space="preserve"><value>Double split complementary</value></data>
+  <data name="RuleSquare" xml:space="preserve"><value>Square</value></data>
+  <data name="RuleCompound" xml:space="preserve"><value>Compound</value></data>
+  <data name="RuleShades" xml:space="preserve"><value>Shades</value></data>
+  <data name="BrightnessLabel" xml:space="preserve"><value>Brightness</value></data>
+  <data name="BaseHexLabel" xml:space="preserve"><value>Base color (HEX)</value></data>
+  <data name="HexInvalid" xml:space="preserve"><value>Enter a valid HEX color, for example #E63946.</value></data>
+  <data name="WheelNamed" xml:space="preserve"><value>Color wheel, base color {0}</value></data>
+  <data name="WheelHint" xml:space="preserve"><value>Drag the dots to rotate the harmony. Drag the large dot to change saturation. Arrow keys move it when the wheel is focused.</value></data>
+  <data name="UseInHarmony" xml:space="preserve"><value>Use in Harmony</value></data>
+  <data name="UseInHarmonyNamed" xml:space="preserve"><value>Use {0} as the harmony base color</value></data>
 </root>

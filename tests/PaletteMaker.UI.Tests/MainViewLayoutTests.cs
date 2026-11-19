@@ -227,7 +227,7 @@ public class MainViewLayoutTests
     }
 
     [AvaloniaFact]
-    public async Task Empty_state_and_cmyk_toast_render_on_phone()
+    public async Task Empty_state_and_cmyk_render_on_phone()
     {
         var (empty, emptyView, emptyVm) = await OpenAsync(360, 740, dark: false, loadImage: false);
         try
@@ -238,18 +238,12 @@ public class MainViewLayoutTests
         }
         finally { empty.Close(); }
 
-        // CMYK metni en uzun değer satırıdır; kopyalama bildirimi de görünür olmalı.
+        // CMYK metni en uzun değer satırıdır (bildirim denetimi kabukta: ShellViewTests).
         var (window, view, vm) = await OpenAsync(360, 740, dark: true, cmyk: true);
         try
         {
-            vm.ShowToast("#E63946 kopyalandı");
-            Settle();
-            var toast = view.FindControl<Border>("Toast")!;
-            Assert.True(toast.IsEffectivelyVisible);
-            var b = BoundsIn(toast, view);
-            Assert.True(b.Left >= 0 && b.Right <= 360 && b.Bottom <= 740);
             Assert.All(vm.Swatches, s => Assert.StartsWith("cmyk(", s.ValueText));
-            Capture(window, "telefon-kucuk-360x740-koyu-cmyk-bildirim");
+            Capture(window, "telefon-kucuk-360x740-koyu-cmyk");
         }
         finally { window.Close(); }
     }

@@ -47,6 +47,23 @@ public static class ColorMath
     public static string ToHex(byte r, byte g, byte b) =>
         string.Create(CultureInfo.InvariantCulture, $"#{r:X2}{g:X2}{b:X2}");
 
+    /// <summary>
+    /// HEX metnini ayrıştırır: <c>#RRGGBB</c>, <c>RRGGBB</c>, <c>#RGB</c> (başta/sonda boşluk yok sayılır). Kültürden bağımsızdır.
+    /// </summary>
+    public static bool TryParseHex(string? text, out byte r, out byte g, out byte b)
+    {
+        r = g = b = 0;
+        if (text == null) return false;
+        var s = text.Trim();
+        if (s.StartsWith('#')) s = s[1..];
+        if (s.Length == 3) s = string.Concat(s.Select(ch => new string(ch, 2)));
+        if (s.Length != 6 || !s.All(Uri.IsHexDigit)) return false;
+        r = byte.Parse(s.AsSpan(0, 2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture);
+        g = byte.Parse(s.AsSpan(2, 2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture);
+        b = byte.Parse(s.AsSpan(4, 2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture);
+        return true;
+    }
+
     /// <summary>Profilsiz (ICC'siz) standart RGB → CMYK; yüzde olarak yuvarlanır.</summary>
     public static (int C, int M, int Y, int K) ToCmyk(byte r, byte g, byte b)
     {

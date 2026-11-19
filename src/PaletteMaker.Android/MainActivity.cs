@@ -103,7 +103,12 @@ public class MainActivity : AvaloniaMainActivity
 
         string? name = DisplayName(resolver, uri);
         // Akış, görünüm modelinin arka plan iş parçacığında açılır ve okunur (URI izni etkinlik yaşadıkça geçerlidir).
-        Dispatcher.UIThread.Post(() => _ = app.MainVm.LoadAsync(name, () => Task.FromResult(Open(resolver, uri))));
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Renk uyumu ya da Ayarlar sekmesindeyken paylaşılan görsel sessizce yüklenmesin: Görsel sekmesine geç.
+            app.ShellVm.Tab = PaletteMaker.ViewModels.ShellTab.Image;
+            _ = app.MainVm.LoadAsync(name, () => Task.FromResult(Open(resolver, uri)));
+        });
     }
 
     private static Stream Open(ContentResolver resolver, AndroidUri uri)

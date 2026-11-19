@@ -40,10 +40,11 @@ public class AccessibilityTests
         Dispatcher.UIThread.RunJobs();
     }
 
-    private static async Task<(Window W, MainView V, MainViewModel Vm)> OpenAsync(bool dark = false)
+    private static async Task<(Window W, ShellView V, MainViewModel Vm)> OpenAsync(bool dark = false)
     {
-        var vm = new MainViewModel();
-        var view = new MainView { DataContext = vm };
+        var shell = new ShellViewModel(new MainViewModel());
+        var vm = shell.Main;
+        var view = new ShellView { DataContext = shell };
         var window = new Window { Width = 360, Height = 740, Content = view, RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light };
         window.Show();
         var png = Png();
@@ -91,7 +92,7 @@ public class AccessibilityTests
                 // Kart adı kartın tüm bilgisini taşır; bildirim ve hata canlı bölgedir.
                 var card = v.GetVisualDescendants().OfType<Border>().First(b => b.Classes.Contains("swatch"));
                 Assert.Contains("#", AutomationProperties.GetName(card));
-                Assert.Equal(AutomationLiveSetting.Polite, AutomationProperties.GetLiveSetting(v.FindControl<Border>("Toast")!.Child!));
+                Assert.Equal(AutomationLiveSetting.Polite, AutomationProperties.GetLiveSetting(v.Find<Border>("Toast").Child!));
                 Assert.Contains(v.GetVisualDescendants().OfType<TextBlock>(), t => AutomationProperties.GetLiveSetting(t) == AutomationLiveSetting.Assertive);
             }
             finally { w.Close(); }
@@ -105,7 +106,7 @@ public class AccessibilityTests
         var (w, v, vm) = await OpenAsync();
         try
         {
-            Assert.True(v.FindControl<Border>("DropZone")!.Focusable);
+            Assert.True(v.Find<Border>("DropZone").Focusable);
             var card = v.GetVisualDescendants().OfType<Border>().First(b => b.Classes.Contains("swatch"));
             Assert.True(card.Focusable);
 
@@ -144,7 +145,7 @@ public class AccessibilityTests
         return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
     }
 
-    private static Color BrushColor(MainView v, string key, ThemeVariant variant)
+    private static Color BrushColor(ShellView v, string key, ThemeVariant variant)
     {
         Assert.True(v.TryFindResource(key, variant, out var res), $"kaynak yok: {key}");
         return ((ISolidColorBrush)res!).Color;
