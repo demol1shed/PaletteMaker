@@ -1,0 +1,13 @@
+PaletteMaker
+Copyright 2026 demol1shed
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The following are NOT covered by that license (see TRADEMARKS.md):
+  - the name "PaletteMaker"
+  - the application icon (src/PaletteMaker.Android/Resources/drawable/ic_launcher_foreground.xml,
+    src/PaletteMaker.Android/Resources/mipmap-anydpi-v26/ic_launcher.xml, store/graphics/icon-512.png)
+  - the store listing graphics and screenshots (store/graphics/)
+
+Third-party components and their licenses are listed in THIRD-PARTY-NOTICES.txt.
+Navigation icons: Google Material Icons / Material Symbols, Apache License 2.0.

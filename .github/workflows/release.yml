@@ -33,8 +33,11 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist/release
-          (cd dist/win-x64 && zip -9 ../release/PaletteMaker-win-x64.zip PaletteMaker.exe)
-          tar czf dist/release/PaletteMaker-linux-x64.tar.gz -C dist/linux-x64 PaletteMaker
+          # Lisans metinleri ikili dağıtımla birlikte gider (Apache-2.0 §4, MIT/BSD/OFL şartları).
+          cp LICENSE NOTICE THIRD-PARTY-NOTICES.txt TRADEMARKS.md dist/win-x64/
+          cp LICENSE NOTICE THIRD-PARTY-NOTICES.txt TRADEMARKS.md dist/linux-x64/
+          (cd dist/win-x64 && zip -9 ../release/PaletteMaker-win-x64.zip PaletteMaker.exe LICENSE NOTICE THIRD-PARTY-NOTICES.txt TRADEMARKS.md)
+          tar czf dist/release/PaletteMaker-linux-x64.tar.gz -C dist/linux-x64 PaletteMaker LICENSE NOTICE THIRD-PARTY-NOTICES.txt TRADEMARKS.md
           (cd dist/release && sha256sum PaletteMaker-win-x64.zip PaletteMaker-linux-x64.tar.gz > SHA256SUMS.txt && cat SHA256SUMS.txt)
 
       - name: Smoke test the Linux build

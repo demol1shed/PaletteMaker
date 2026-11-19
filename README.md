@@ -99,7 +99,8 @@ src/PaletteMaker.Android/     Android launcher: activity, share/open-with handli
 tests/PaletteMaker.Tests/     xUnit tests for the core library
 tests/PaletteMaker.UI.Tests/  Headless layout tests; they also write phone/tablet/desktop screenshots
 docs/privacy.html             Privacy policy (Turkish + English) for the Play listing
-store/                        Play listing texts, data-safety answers and generated graphics
+store/                        Play listing texts, data-safety answers and generated graphics (not Apache-licensed, see TRADEMARKS.md)
+third-party/, tools/          Bundled license texts and the script that generates THIRD-PARTY-NOTICES.txt
 ```
 
 Built with C#, .NET 10, [Avalonia UI](https://avaloniaui.net/) and [SkiaSharp](https://github.com/mono/SkiaSharp).
@@ -110,12 +111,14 @@ Images are decoded by Skia's native codecs. To limit abuse, files over 100 MB or
 
 ## Credits
 
-The navigation icons are from Google's [Material Icons / Material Symbols](https://fonts.google.com/icons) (Apache License 2.0).
+The navigation icons are from Google's [Material Icons / Material Symbols](https://fonts.google.com/icons) (Apache License 2.0). The UI font is [Inter](https://github.com/rsms/inter) (SIL OFL 1.1). Full third-party license texts (Avalonia, SkiaSharp and the native libraries it bundles, CommunityToolkit.Mvvm and others) are in [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt), regenerated with `tools/gen-third-party-notices.sh`.
 
 ## License
 
-Copyright (C) 2026 demol1shed
+Copyright 2026 demol1shed
 
-PaletteMaker is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License v3.0** (see [`LICENSE`](LICENSE)). It is distributed in the hope that it will be useful, but **without any warranty**.
+The source code is licensed under the **Apache License, Version 2.0** (see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE)). It is provided "as is", **without warranties** of any kind.
 
-You are welcome to build it yourself (see *Build from source*); the default build has no ads. The Google Play version is built from this same code with `-p:Store=play` and additionally bundles Google's proprietary ad, consent and billing libraries, which are not part of this repository and are not covered by the GPL. The app name and icon are not licensed for use by derived works.
+You are welcome to build it yourself (see *Build from source*); the default build has no ads. The Google Play version is built from this same code with `-p:Store=play` and additionally bundles Google's proprietary ad, consent and billing libraries, which are not part of this repository and are governed by Google's own terms.
+
+**The app name, icon and store graphics are not covered by the Apache license** (see [`TRADEMARKS.md`](TRADEMARKS.md)): forks must use a different name, icon and application ID. The official Android app is published only by the author.
