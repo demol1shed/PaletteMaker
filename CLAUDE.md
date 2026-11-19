@@ -53,6 +53,10 @@ dotnet publish src/PaletteMaker.Android -c Release -f net10.0-android -o dist/an
 - Do not edit `PaletteMaker.Android.csproj.user` or add the Android project to `PaletteMaker.slnx`.
 - Anything marked "not tried on a device" in `ARCHITECTURE.md` must not be claimed as verified.
 
-## Commit discipline
+## Git workflow
 
 Keep the commit history clean. Prefer small, descriptive commits at logical points over one huge commit: one commit is one logical change, and refactors, behavior changes and tests go in separate commits, so a reviewer can digest the code step by step. The subject line is imperative and describes the change; the body explains why.
+
+- Never commit or push directly to `main`. Work on a topic branch named `<type>/<short-description>` (e.g. `docs/architecture-split`), push it, open a PR with `gh pr create` (a Summary and a Test plan), and merge through the PR once CI passes. Delete the branch after merging.
+- Merge with rebase-merge so the history stays linear and the separate commits survive; do not squash unrelated commits together.
+- Commit messages and PR descriptions are written in English.
