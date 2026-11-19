@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using PaletteMaker.Core;
+using PaletteMaker.Settings;
 using PaletteMaker.Sharing;
 using PaletteMaker.ViewModels;
 using PaletteMaker.Views;
@@ -14,12 +16,36 @@ public partial class App : Application
     /// Tek görünüm modeli. Android etkinliği yeniden oluşturabildiği için görünümden bağımsız tutulur;
     /// paylaşımla gelen görsel de (Android MainActivity) buraya yüklenir.
     /// </summary>
-    public MainViewModel MainVm { get; } = new();
+    public MainViewModel MainVm { get; }
+
+    /// <summary>
+    /// Ayar dosyasının yolu; başlatıcı (masaüstü <c>Program</c>, <c>AndroidApp</c>) <c>App</c> oluşmadan önce atar.
+    /// Boşsa (testler) ayarlar yalnızca bellekte tutulur, kullanıcı dosyasına dokunulmaz.
+    /// </summary>
+    public static string? SettingsFilePath { get; set; }
+
+    /// <summary>Kalıcı tercihler (tema, dil, palet varsayılanları, dışa aktarma).</summary>
+    public SettingsService Settings { get; }
 
     /// <summary>Kabuk (seçili sekme + üç ekran). <see cref="MainVm"/> onun "Görsel" ekranıdır; sekme durumu etkinlik yeniden oluşunca korunur.</summary>
     public ShellViewModel ShellVm { get; }
 
-    public App() => ShellVm = new ShellViewModel(MainVm);
+    public App()
+    {
+        Settings = new SettingsService(SettingsFilePath);
+        ApplyLanguage(Settings.Current.Language);
+        MainVm = new MainViewModel(Settings.Current);
+        ShellVm = new ShellViewModel(MainVm, settings: new SettingsViewModel(Settings));
+    }
+
+    /// <summary>Arayüz metinleri açılışta bir kez okunur: "Sistem" dışındaki seçim kültürü baştan ayarlar.</summary>
+    private static void ApplyLanguage(LanguageChoice choice)
+    {
+        if (choice == LanguageChoice.System) return;
+        var culture = new System.Globalization.CultureInfo(choice == LanguageChoice.Turkish ? "tr" : "en");
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+        System.Globalization.CultureInfo.CurrentUICulture = culture;
+    }
 
     /// <summary>
     /// Android Play sürümünün reklam kontrolünü üreten fabrika (<c>MainActivity</c> görünüm oluşmadan önce atar).
@@ -37,6 +63,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        SettingsViewModel.ApplyTheme(Settings.Current.Theme);
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow { DataContext = ShellVm };

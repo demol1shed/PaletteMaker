@@ -36,6 +36,17 @@ public abstract partial class PaletteScreenViewModel : ObservableObject
         set { if (Enum.IsDefined((ValueFormat)value)) ValueFormat = (ValueFormat)value; }
     }
 
+    /// <summary>HEX yazım tercihi (büyük/küçük harf, "#"); ayarlardan gelir, kartları ve dışa aktarmayı etkiler.</summary>
+    [ObservableProperty] private HexStyle _hexStyle;
+
+    /// <summary>Paylaşılan kart PNG'sinde görseldeki pay yazılsın mı (ayar). Pay olmayan paletlerde etkisizdir.</summary>
+    [ObservableProperty] private bool _cardShowsShare = true;
+
+    partial void OnHexStyleChanged(HexStyle value)
+    {
+        foreach (var s in Swatches) s.HexStyle = value;
+    }
+
     /// <summary>"Paylaş / dışa aktar" alt sayfası açık mı.</summary>
     [ObservableProperty] private bool _isExportOpen;
 
@@ -51,7 +62,7 @@ public abstract partial class PaletteScreenViewModel : ObservableObject
     {
         Swatches.Clear();
         Palette = palette;
-        foreach (var c in palette) Swatches.Add(new SwatchViewModel(c, ValueFormat, HasShares, OffersHarmonyAction));
+        foreach (var c in palette) Swatches.Add(new SwatchViewModel(c, ValueFormat, HasShares, OffersHarmonyAction) { HexStyle = HexStyle });
         OnPropertyChanged(nameof(Palette));
         OnPropertyChanged(nameof(HasPalette));
     }
@@ -66,14 +77,14 @@ public abstract partial class PaletteScreenViewModel : ObservableObject
         if (_toastCts == cts) ToastMessage = null;
     }
 
-    public string AllHexText() => PaletteExport.HexList(Palette);
+    public string AllHexText() => PaletteExport.HexList(Palette, HexStyle);
 
     /// <summary>Verilen türde palet metni (panoya kopyalama / dosyaya yazma).</summary>
     public string ExportText(ExportKind kind) => kind switch
     {
-        ExportKind.Css => PaletteExport.CssVariables(Palette),
-        ExportKind.Json => PaletteExport.Json(Palette, HasShares),
-        ExportKind.AndroidColorsXml => PaletteExport.AndroidColorsXml(Palette),
+        ExportKind.Css => PaletteExport.CssVariables(Palette, HexStyle),
+        ExportKind.Json => PaletteExport.Json(Palette, HasShares, HexStyle),
+        ExportKind.AndroidColorsXml => PaletteExport.AndroidColorsXml(Palette, HexStyle),
         ExportKind.GimpPalette => PaletteExport.GimpPalette(Palette, BaseFileName),
         _ => PaletteExport.HexList(Palette),
     };
@@ -85,7 +96,7 @@ public abstract partial class PaletteScreenViewModel : ObservableObject
     public string ExportFileName(string extension) => $"{BaseFileName}-palette.{extension}";
 
     /// <summary>Paleti paylaşılabilir PNG kart olarak çizer (arka planda çağrılması önerilir).</summary>
-    public byte[] RenderCardPng() => PaletteCardRenderer.RenderPng(Palette, HasShares);
+    public byte[] RenderCardPng() => PaletteCardRenderer.RenderPng(Palette, HasShares && CardShowsShare);
 
     /// <summary>Adobe Swatch Exchange (.ase): Illustrator / InDesign / Photoshop.</summary>
     public byte[] ExportAse() => PaletteExport.AdobeSwatchExchange(Palette);

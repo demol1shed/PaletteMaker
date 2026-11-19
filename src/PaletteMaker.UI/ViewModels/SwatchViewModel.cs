@@ -29,7 +29,14 @@ public partial class SwatchViewModel : ObservableObject
     public bool ShowShare { get; }
     public bool OffersHarmonyAction { get; }
     public IBrush Brush { get; }
-    public string Hex => _color.Hex;
+    /// <summary>Ayardaki HEX yazım tercihi; değişince <see cref="Hex"/> ve ekran okuyucu adı yenilenir.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Hex))]
+    [NotifyPropertyChangedFor(nameof(AccessibleName))]
+    [NotifyPropertyChangedFor(nameof(HarmonyActionName))]
+    private HexStyle _hexStyle;
+
+    public string Hex => HexStyle.Apply(_color.Hex);
 
     public string ValueText => Format switch
     {

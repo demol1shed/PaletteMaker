@@ -9,6 +9,16 @@ namespace PaletteMaker.ViewModels;
 
 public partial class MainViewModel : PaletteScreenViewModel
 {
+    public MainViewModel() { }
+
+    /// <summary>Kaydırıcıları ve değer biçimini kalıcı varsayılanlarla başlatır.</summary>
+    public MainViewModel(AppSettings defaults)
+    {
+        MaxColors = defaults.DefaultMaxColors;
+        MergeStrength = defaults.DefaultMergeStrength;
+        ValueFormat = Enum.IsDefined((ValueFormat)defaults.DefaultValueFormat) ? (ValueFormat)defaults.DefaultValueFormat : ValueFormat.Rgb;
+    }
+
     private LoadedImage? _image;
     private CancellationTokenSource? _computeCts;
     private int _loadVersion;

@@ -11,9 +11,6 @@ public enum ShellTab
     Harmony = 2,
 }
 
-/// <summary>Henüz içeriği olmayan Ayarlar ekranı.</summary>
-public sealed class SettingsViewModel : ObservableObject;
-
 /// <summary>
 /// Uygulama kabuğu: seçili sekme ve üç ekranın görünüm modelleri. Etkin palet ekranının durumuna (alt sayfa, bildirim)
 /// kabuk bağlanır. Android etkinliği yeniden oluşabildiği için <c>App</c> tarafından tek örnek olarak tutulur.
@@ -26,6 +23,8 @@ public partial class ShellViewModel : ObservableObject
         Harmony = harmony ?? new HarmonyViewModel();
         Settings = settings ?? new SettingsViewModel();
         Harmony.ValueFormat = Main.ValueFormat;
+        ApplyOutputSettings();
+        Settings.OutputChanged += (_, _) => ApplyOutputSettings();
 
         Main.HarmonyBaseRequested += (_, color) =>
         {
@@ -35,6 +34,17 @@ public partial class ShellViewModel : ObservableObject
         // Değer biçimi tek seçimdir: iki ekranda aynıdır.
         Main.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(ValueFormat)) Harmony.ValueFormat = Main.ValueFormat; };
         Harmony.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(ValueFormat)) Main.ValueFormat = Harmony.ValueFormat; };
+    }
+
+    /// <summary>Hex yazımı ve kart tercihleri iki palet ekranında aynıdır.</summary>
+    private void ApplyOutputSettings()
+    {
+        var s = Settings.Settings;
+        foreach (PaletteScreenViewModel screen in new PaletteScreenViewModel[] { Main, Harmony })
+        {
+            screen.HexStyle = s.HexStyle;
+            screen.CardShowsShare = s.CardShowsShare;
+        }
     }
 
     private static string ValueFormat => nameof(PaletteScreenViewModel.ValueFormat);

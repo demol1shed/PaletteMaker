@@ -63,7 +63,6 @@
   <data name="NavHarmony" xml:space="preserve"><value>Uyum</value></data>
   <data name="NavBarLabel" xml:space="preserve"><value>Ana gezinme</value></data>
   <data name="SettingsTitle" xml:space="preserve"><value>Ayarlar</value></data>
-  <data name="SettingsComingSoon" xml:space="preserve"><value>Ayarlar yakında geliyor.</value></data>
   <data name="HarmonyTitle" xml:space="preserve"><value>Renk uyumu</value></data>
   <data name="HarmonyRuleLabel" xml:space="preserve"><value>Uyum kuralı</value></data>
   <data name="RuleAnalogous" xml:space="preserve"><value>Analog</value></data>
@@ -82,4 +81,22 @@
   <data name="WheelHint" xml:space="preserve"><value>Uyumu döndürmek için noktaları sürükle. Büyük noktayı sürükleyerek doygunluğu değiştir. Çark odaktayken ok tuşlarıyla da oynatılır.</value></data>
   <data name="UseInHarmony" xml:space="preserve"><value>Uyumda kullan</value></data>
   <data name="UseInHarmonyNamed" xml:space="preserve"><value>{0} rengini uyum tabanı yap</value></data>
+  <data name="SettingsAppearance" xml:space="preserve"><value>Görünüm</value></data>
+  <data name="SettingsTheme" xml:space="preserve"><value>Tema</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>Sistem</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Açık</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Koyu</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>Dil</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>Sistem</value></data>
+  <data name="LanguageRestart" xml:space="preserve"><value>Uygulama yeniden başlatılınca uygulanır.</value></data>
+  <data name="SettingsDefaults" xml:space="preserve"><value>Palet varsayılanları</value></data>
+  <data name="SettingsDefaultsHint" xml:space="preserve"><value>Uygulama bir sonraki açılışında kullanılır.</value></data>
+  <data name="SettingsExport" xml:space="preserve"><value>Paylaşma ve dışa aktarma</value></data>
+  <data name="HexLowercase" xml:space="preserve"><value>HEX kodları küçük harf</value></data>
+  <data name="HexLowercaseHint" xml:space="preserve"><value>#E63946 yerine #e63946. Kartlara, kopyalamaya ve dışa aktarmaya uygulanır.</value></data>
+  <data name="HexWithHash" xml:space="preserve"><value>HEX kodunda # olsun</value></data>
+  <data name="HexWithHashHint" xml:space="preserve"><value>Kapatırsan E63946 kopyalanır. CSS, XML ve JSON her zaman # işaretini korur.</value></data>
+  <data name="CardShowsShare" xml:space="preserve"><value>Kart PNG'sinde görsel payı göster</value></data>
+  <data name="CardShowsShareHint" xml:space="preserve"><value>Paylaşılan kartta her rengin yüzdesini HEX'in altına yazar.</value></data>
+  <data name="SettingsReset" xml:space="preserve"><value>Varsayılanlara dön</value></data>
 </root>

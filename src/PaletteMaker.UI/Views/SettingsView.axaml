@@ -1,12 +1,100 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PaletteMaker.ViewModels"
              xmlns:loc="using:PaletteMaker.Localization"
-             x:Class="PaletteMaker.Views.SettingsView">
-  <!-- Yer tutucu: ayarlar sonra eklenecek. -->
+             x:Class="PaletteMaker.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <UserControl.Styles>
+    <Style Selector="StackPanel#Page">
+      <Setter Property="Margin" Value="20" />
+    </Style>
+    <Style Selector="TextBlock.group">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,12,0,0" />
+    </Style>
+    <Style Selector="ComboBox.pick">
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="MinWidth" Value="140" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector="Button#ResetButton">
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+  </UserControl.Styles>
+
   <Grid Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
-    <StackPanel Margin="20" Spacing="8" MaxWidth="1100" HorizontalAlignment="Stretch" VerticalAlignment="Top">
-      <TextBlock Text="{loc:T SettingsTitle}" FontSize="24" FontWeight="SemiBold" />
-      <TextBlock Classes="hint" Text="{loc:T SettingsComingSoon}" />
-    </StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel x:Name="Page" Spacing="10" MaxWidth="700" HorizontalAlignment="Stretch">
+        <TextBlock Text="{loc:T SettingsTitle}" FontSize="24" FontWeight="SemiBold" />
+
+        <TextBlock Classes="group" Text="{loc:T SettingsAppearance}" />
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="{loc:T SettingsTheme}" VerticalAlignment="Center" />
+          <ComboBox x:Name="ThemeBox" Classes="pick" Grid.Column="1" SelectedIndex="{Binding ThemeIndex}"
+                    AutomationProperties.Name="{loc:T SettingsTheme}">
+            <ComboBoxItem Content="{loc:T ThemeSystem}" />
+            <ComboBoxItem Content="{loc:T ThemeLight}" />
+            <ComboBoxItem Content="{loc:T ThemeDark}" />
+          </ComboBox>
+        </Grid>
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="{loc:T SettingsLanguage}" VerticalAlignment="Center" />
+          <ComboBox x:Name="LanguageBox" Classes="pick" Grid.Column="1" SelectedIndex="{Binding LanguageIndex}"
+                    AutomationProperties.Name="{loc:T SettingsLanguage}">
+            <ComboBoxItem Content="{loc:T LanguageSystem}" />
+            <ComboBoxItem Content="English" />
+            <ComboBoxItem Content="Türkçe" />
+          </ComboBox>
+        </Grid>
+        <TextBlock Classes="hint" Text="{loc:T LanguageRestart}" IsVisible="{Binding RestartNeeded}" />
+
+        <TextBlock Classes="group" Text="{loc:T SettingsDefaults}" />
+        <TextBlock Classes="hint" Text="{loc:T SettingsDefaultsHint}" />
+        <StackPanel Spacing="2">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{loc:T MaxColorsLabel}" />
+            <TextBlock Grid.Column="1" Text="{Binding DefaultMaxColorsText}" FontWeight="SemiBold" />
+          </Grid>
+          <Slider x:Name="DefaultMaxColorsSlider" Minimum="2" Maximum="48" TickFrequency="1" IsSnapToTickEnabled="True"
+                  AutomationProperties.Name="{loc:T MaxColorsLabel}" AutomationProperties.HelpText="{loc:T MaxColorsHint}"
+                  Value="{Binding DefaultMaxColors}" />
+        </StackPanel>
+        <StackPanel Spacing="2">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{loc:T MergeLabel}" />
+            <TextBlock Grid.Column="1" Text="{loc:T MergeRange}" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
+          </Grid>
+          <Slider x:Name="DefaultMergeSlider" Minimum="0" Maximum="1" Value="{Binding DefaultMergeStrength}"
+                  AutomationProperties.Name="{loc:T MergeLabel}" AutomationProperties.HelpText="{loc:T MergeHint}" />
+        </StackPanel>
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="{loc:T FormatLabel}" VerticalAlignment="Center" />
+          <ComboBox x:Name="DefaultFormatBox" Classes="pick" Grid.Column="1" SelectedIndex="{Binding DefaultFormatIndex}"
+                    AutomationProperties.Name="{loc:T FormatLabel}">
+            <ComboBoxItem Content="RGB" />
+            <ComboBoxItem Content="CMYK" />
+            <ComboBoxItem Content="HSL" />
+            <ComboBoxItem Content="OKLCH" />
+          </ComboBox>
+        </Grid>
+
+        <TextBlock Classes="group" Text="{loc:T SettingsExport}" />
+        <CheckBox x:Name="HexLowercaseBox" IsChecked="{Binding HexLowercase}" Content="{loc:T HexLowercase}"
+                  AutomationProperties.Name="{loc:T HexLowercase}" AutomationProperties.HelpText="{loc:T HexLowercaseHint}" />
+        <TextBlock Classes="hint" Text="{loc:T HexLowercaseHint}" />
+        <CheckBox x:Name="HexWithHashBox" IsChecked="{Binding HexWithHash}" Content="{loc:T HexWithHash}"
+                  AutomationProperties.Name="{loc:T HexWithHash}" AutomationProperties.HelpText="{loc:T HexWithHashHint}" />
+        <TextBlock Classes="hint" Text="{loc:T HexWithHashHint}" />
+        <CheckBox x:Name="CardShareBox" IsChecked="{Binding CardShowsShare}" Content="{loc:T CardShowsShare}"
+                  AutomationProperties.Name="{loc:T CardShowsShare}" AutomationProperties.HelpText="{loc:T CardShowsShareHint}" />
+        <TextBlock Classes="hint" Text="{loc:T CardShowsShareHint}" />
+
+        <Button x:Name="ResetButton" Margin="0,16,0,0" Content="{loc:T SettingsReset}" Command="{Binding ResetToDefaultsCommand}"
+                AutomationProperties.Name="{loc:T SettingsReset}" />
+      </StackPanel>
+    </ScrollViewer>
   </Grid>
 </UserControl>

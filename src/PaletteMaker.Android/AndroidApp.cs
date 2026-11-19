@@ -14,6 +14,10 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
     {
     }
 
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) =>
-        base.CustomizeAppBuilder(builder).WithInterFont();
+    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    {
+        // App oluşmadan önce: ayarlar uygulamanın özel veri klasöründe tutulur.
+        App.SettingsFilePath = PaletteMaker.Settings.SettingsService.DefaultPath();
+        return base.CustomizeAppBuilder(builder).WithInterFont();
+    }
 }
