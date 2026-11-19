@@ -98,7 +98,7 @@
     <Border x:Name="Toast" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="16,0,16,24"
             Padding="16,10" CornerRadius="20" Background="#E6202020" BorderBrush="#40FFFFFF" BorderThickness="1"
             IsHitTestVisible="False"
-            IsVisible="{Binding ActiveScreen.ToastMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            IsVisible="{Binding ActiveScreen.ToastMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}">
       <TextBlock Text="{Binding ActiveScreen.ToastMessage}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
                  AutomationProperties.LiveSetting="Polite" />
     </Border>

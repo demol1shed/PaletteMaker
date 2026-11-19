@@ -174,6 +174,20 @@ public class ShellViewTests
     }
 
     [AvaloniaFact]
+    public async Task Toast_is_hidden_on_the_settings_tab_where_there_is_no_active_screen()
+    {
+        var (w, v, vm) = await OpenShellAsync(360, 740);
+        try
+        {
+            var toast = v.Find<Border>("Toast");
+            vm.Tab = ShellTab.Settings; Settle();
+            Assert.Null(vm.ActiveScreen);
+            Assert.False(toast.IsVisible, "ActiveScreen yokken boş bildirim kutusu çizilmemeli");
+        }
+        finally { w.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Use_in_harmony_switches_the_tab_and_sets_the_base_color()
     {
         var (w, v, vm) = await OpenShellAsync(412, 915);
