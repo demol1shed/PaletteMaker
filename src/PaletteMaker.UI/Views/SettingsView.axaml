@@ -20,7 +20,7 @@
     <Style Selector="CheckBox">
       <Setter Property="MinHeight" Value="40" />
     </Style>
-    <Style Selector="Button#ResetButton">
+    <Style Selector="Button#ResetButton, Button#SourceButton, Button#LicenseButton">
       <Setter Property="MinHeight" Value="40" />
     </Style>
   </UserControl.Styles>
@@ -94,6 +94,19 @@
 
         <Button x:Name="ResetButton" Margin="0,16,0,0" Content="{loc:T SettingsReset}" Command="{Binding ResetToDefaultsCommand}"
                 AutomationProperties.Name="{loc:T SettingsReset}" />
+
+        <TextBlock Classes="group" Text="{loc:T SettingsAbout}" />
+        <TextBlock x:Name="AboutVersionText" Text="{Binding AboutVersion}" FontWeight="SemiBold" />
+        <TextBlock Classes="hint" Text="{loc:T AboutDescription}" />
+        <TextBlock Classes="hint" Text="{loc:T AboutLicense}" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button x:Name="SourceButton" Tag="https://github.com/demol1shed/PaletteMaker" Click="OnLinkClick"
+                  Content="{loc:T AboutSource}" AutomationProperties.Name="{loc:T AboutSource}" />
+          <Button x:Name="LicenseButton" Tag="https://github.com/demol1shed/PaletteMaker/blob/main/LICENSE" Click="OnLinkClick"
+                  Content="{loc:T AboutLicenseLink}" AutomationProperties.Name="{loc:T AboutLicenseLink}" />
+        </StackPanel>
+        <TextBlock Text="{loc:T AboutThirdParty}" FontWeight="SemiBold" Margin="0,8,0,0" />
+        <TextBlock Classes="hint" Text="{loc:T AboutThirdPartyList}" Margin="0,0,0,24" />
       </StackPanel>
     </ScrollViewer>
   </Grid>

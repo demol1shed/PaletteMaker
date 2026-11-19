@@ -99,4 +99,12 @@
   <data name="CardShowsShare" xml:space="preserve"><value>Show image share on card PNG</value></data>
   <data name="CardShowsShareHint" xml:space="preserve"><value>Writes each color's percentage under its HEX on the shared card.</value></data>
   <data name="SettingsReset" xml:space="preserve"><value>Reset to defaults</value></data>
+  <data name="SettingsAbout" xml:space="preserve"><value>About</value></data>
+  <data name="AboutVersion" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="AboutDescription" xml:space="preserve"><value>Extracts a color palette from an image and builds harmonies on a color wheel. Everything runs on your device.</value></data>
+  <data name="AboutLicense" xml:space="preserve"><value>Open source, licensed under Apache-2.0.</value></data>
+  <data name="AboutSource" xml:space="preserve"><value>Source code</value></data>
+  <data name="AboutLicenseLink" xml:space="preserve"><value>License</value></data>
+  <data name="AboutThirdParty" xml:space="preserve"><value>Built with</value></data>
+  <data name="AboutThirdPartyList" xml:space="preserve"><value>Avalonia (MIT), SkiaSharp (MIT; FreeType, libpng, libjpeg-turbo, libwebp, zlib, HarfBuzz, ANGLE), CommunityToolkit.Mvvm (MIT), Inter font (SIL OFL 1.1), Material Icons (Apache-2.0).</value></data>
 </root>

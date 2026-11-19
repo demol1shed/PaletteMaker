@@ -99,4 +99,12 @@
   <data name="CardShowsShare" xml:space="preserve"><value>Kart PNG'sinde görsel payı göster</value></data>
   <data name="CardShowsShareHint" xml:space="preserve"><value>Paylaşılan kartta her rengin yüzdesini HEX'in altına yazar.</value></data>
   <data name="SettingsReset" xml:space="preserve"><value>Varsayılanlara dön</value></data>
+  <data name="SettingsAbout" xml:space="preserve"><value>Hakkında</value></data>
+  <data name="AboutVersion" xml:space="preserve"><value>Sürüm {0}</value></data>
+  <data name="AboutDescription" xml:space="preserve"><value>Görselden renk paleti çıkarır ve renk çarkında uyumlar kurar. Her şey cihazında çalışır.</value></data>
+  <data name="AboutLicense" xml:space="preserve"><value>Açık kaynak, Apache-2.0 lisanslı.</value></data>
+  <data name="AboutSource" xml:space="preserve"><value>Kaynak kodu</value></data>
+  <data name="AboutLicenseLink" xml:space="preserve"><value>Lisans</value></data>
+  <data name="AboutThirdParty" xml:space="preserve"><value>Kullanılanlar</value></data>
+  <data name="AboutThirdPartyList" xml:space="preserve"><value>Avalonia (MIT), SkiaSharp (MIT; FreeType, libpng, libjpeg-turbo, libwebp, zlib, HarfBuzz, ANGLE), CommunityToolkit.Mvvm (MIT), Inter yazı tipi (SIL OFL 1.1), Material Icons (Apache-2.0).</value></data>
 </root>

@@ -27,6 +27,17 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>Hex yazımı ya da kart tercihi değişince tetiklenir (kabuk iki palet ekranına iletir).</summary>
     public event EventHandler? OutputChanged;
 
+    public const string RepositoryUrl = "https://github.com/demol1shed/PaletteMaker";
+    public const string LicenseUrl = RepositoryUrl + "/blob/main/LICENSE";
+
+    /// <summary>Uygulama sürümü ("0.5.0"); derleme sürümünden gelir, "+commit" eki atılır.</summary>
+    public static string VersionText { get; } =
+        (typeof(SettingsViewModel).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion
+         ?? typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "?").Split('+')[0];
+
+    public string AboutVersion => Localization.Loc.Format("AboutVersion", VersionText);
+
     public AppSettings Settings => _service.Current;
 
     [ObservableProperty] private int _themeIndex;

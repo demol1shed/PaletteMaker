@@ -86,6 +86,25 @@ public class SettingsViewTests
         Assert.True(vm.RestartNeeded);
     }
 
+    [AvaloniaFact]
+    public async Task About_shows_the_version_and_link_buttons_use_https()
+    {
+        var (window, view, _) = await OpenShellAsync(900, 900, loadImage: false, tab: ShellTab.Settings);
+        try
+        {
+            var version = VisualFind.Find<TextBlock>(view, "AboutVersionText")!;
+            Assert.Matches(@"\d+\.\d+\.\d+", version.Text);
+            Assert.DoesNotContain("+", version.Text);
+            foreach (var id in new[] { "SourceButton", "LicenseButton" })
+            {
+                var b = VisualFind.Find<Button>(view, id)!;
+                Assert.StartsWith("https://github.com/", (string)b.Tag!);
+                Assert.True(b.Bounds.Height >= 40);
+            }
+        }
+        finally { window.Close(); }
+    }
+
     [AvaloniaTheory]
     [InlineData(390, 800, "telefon")]
     [InlineData(1000, 800, "masaustu")]
