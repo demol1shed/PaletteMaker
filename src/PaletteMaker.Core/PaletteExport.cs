@@ -14,24 +14,24 @@ public static class PaletteExport
     public const int DefaultGimpColumns = 8;
 
     /// <summary>Satır satır HEX kodları: <c>#E63946</c>.</summary>
-    public static string HexList(IReadOnlyList<PaletteColor> palette) =>
-        string.Join("\n", palette.Select(c => c.Hex));
+    public static string HexList(IReadOnlyList<PaletteColor> palette, HexStyle style = default) =>
+        string.Join("\n", palette.Select(c => style.Apply(c.Hex)));
 
     /// <summary>CSS özel özellikleri: <c>--color-1: #E63946;</c> bir <c>:root</c> bloğunda.</summary>
-    public static string CssVariables(IReadOnlyList<PaletteColor> palette)
+    public static string CssVariables(IReadOnlyList<PaletteColor> palette, HexStyle style = default)
     {
         var sb = new StringBuilder(":root {\n");
         for (int i = 0; i < palette.Count; i++)
-            sb.Append(CultureInfo.InvariantCulture, $"  --color-{i + 1}: {palette[i].Hex};\n");
+            sb.Append(CultureInfo.InvariantCulture, $"  --color-{i + 1}: {style.KeepHash.Apply(palette[i].Hex)};\n");
         return sb.Append('}').ToString();
     }
 
     /// <summary>Android <c>colors.xml</c>: <c>&lt;color name="palette_1"&gt;#E63946&lt;/color&gt;</c>.</summary>
-    public static string AndroidColorsXml(IReadOnlyList<PaletteColor> palette)
+    public static string AndroidColorsXml(IReadOnlyList<PaletteColor> palette, HexStyle style = default)
     {
         var sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n");
         for (int i = 0; i < palette.Count; i++)
-            sb.Append(CultureInfo.InvariantCulture, $"    <color name=\"palette_{i + 1}\">{palette[i].Hex}</color>\n");
+            sb.Append(CultureInfo.InvariantCulture, $"    <color name=\"palette_{i + 1}\">{style.KeepHash.Apply(palette[i].Hex)}</color>\n");
         return sb.Append("</resources>").ToString();
     }
 
@@ -39,7 +39,7 @@ public static class PaletteExport
     /// JSON dizisi: her renk için hex, rgb, cmyk, hsl, oklch metinleri ve görseldeki pay (0–1, 4 ondalık).
     /// Pay görselden gelmeyen paletlerde (renk uyumu) anlamsızdır: <paramref name="includeShare"/> = false alanı yazmaz.
     /// </summary>
-    public static string Json(IReadOnlyList<PaletteColor> palette, bool includeShare = true)
+    public static string Json(IReadOnlyList<PaletteColor> palette, bool includeShare = true, HexStyle style = default)
     {
         using var stream = new MemoryStream();
         using (var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
@@ -48,7 +48,7 @@ public static class PaletteExport
             foreach (var c in palette)
             {
                 w.WriteStartObject();
-                w.WriteString("hex", c.Hex);
+                w.WriteString("hex", style.KeepHash.Apply(c.Hex));
                 w.WriteString("rgb", c.RgbText);
                 w.WriteString("cmyk", c.CmykText);
                 w.WriteString("hsl", c.HslText);
