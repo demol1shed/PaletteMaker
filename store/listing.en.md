@@ -5,14 +5,14 @@
 **Short description** (70/80):
 Pull a color palette from any photo. Copy HEX, RGB or CMYK in one tap.
 
-**Full description** (1419/4000):
+**Full description** (1399/4000):
 
-Palet Çıkarıcı (Image Palette Extractor) pulls the dominant colors out of any photo or image and shows each one as a card that is ready to copy.
+Image Palette Extractor pulls the dominant colors out of any photo or image and shows each one as a card that is ready to copy.
 
 HOW IT WORKS
-• Pick an image, or send one from your gallery with "Share → Palet Çıkarıcı".
+• Pick an image, or send one from your gallery with "Share → Palette Extractor".
 • Colors appear as cards with the HEX code, the RGB or CMYK value and the share of the image each color covers.
-• Tap a card to copy its HEX. Tap the value line to copy the RGB/CMYK text. "Tümünü kopyala" copies every HEX code at once.
+• Tap a card to copy its HEX. Tap the value line to copy the RGB/CMYK text. "Copy all" copies every HEX code at once.
 
 FEATURES
 • Anywhere from 2 to 48 colors.
